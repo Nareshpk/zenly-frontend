@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  baseUrl: '"http://localhost:5000',
+  baseUrl: '"https://zenly-backend-0lcx.onrender.com',
 }
 

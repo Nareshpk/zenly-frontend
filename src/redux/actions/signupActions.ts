@@ -1,7 +1,6 @@
 
 import axios from "axios";
 import { SIGNUP_REQUEST, SIGNUP_SUCCESS, SIGNUP_FAILURE } from "../constants/signupConstants";
-import { environment } from "../../environment/environment";
 
 
 export const signupRequest = () => ({
@@ -22,7 +21,7 @@ export const signup = (formData: any) => async (dispatch: any) => {
   try {
     console.log("Signup form data:", formData);
     const response = await axios.post(
-      `${environment.baseUrl}/api/auth/signup`,
+      `${process.env.REACT_APP_BASE_URL}/api/auth/signup`,
       formData,
       {
         headers: {
