@@ -4,10 +4,8 @@ import {
   ChevronRight,
   Clock,
   CreditCard,
-  Mail,
-  Phone,
-  XCircle,
   X,
+  XCircle
 } from "lucide-react";
 import { useState } from "react";
 
@@ -272,6 +270,7 @@ export default function MyAppointments() {
               <div className="flex gap-4">
                 <img
                   src={selected.doctorImage}
+                  alt={`${selected.doctorName} profile`}
                   className="w-20 h-20 rounded-xl object-cover"
                 />
                 <div>
