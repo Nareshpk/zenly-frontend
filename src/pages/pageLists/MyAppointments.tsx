@@ -109,7 +109,7 @@ export default function MyAppointments() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="w-full  px-6">
         {/* Header */}
         <header className="rounded-2xl p-8 bg-gradient-to-r from-primary to-indigo-600 text-white shadow-lg mb-8 flex items-center gap-6">
           <div className="w-20 h-20 shrink-0 rounded-full bg-white/10 flex items-center justify-center ring-1 ring-white/20">

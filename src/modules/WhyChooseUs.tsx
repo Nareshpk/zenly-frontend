@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { benefitsData } from "../assets/assets";
 
 
-const containerVariants:any = {
+const containerVariants: any = {
   hidden: {},
   show: { transition: { staggerChildren: 0.08 } },
 };
@@ -18,17 +18,18 @@ const cardVariants: any = {
 export default function WhyChooseUs() {
   const navigate = useNavigate();
   return (
-    <section className="w-full bg-gradient-to-b from-[#FBFDFF] to-[#F4F8FF] py-20 overflow-hidden">
+    // prevent horizontal overflow on small screens
+    <section className="w-full bg-gradient-to-b from-[#FBFDFF] to-[#F4F8FF] py-20 overflow-hidden relative overflow-x-hidden">
       {/* soft background accents */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-0 top-8 w-[420px] h-[420px] rounded-full opacity-8 blur-3xl"
-        style={{ background: "radial-gradient(circle at 10% 10%, rgba(99,102,241,0.08), transparent 35%)" }}
+        className="pointer-events-none absolute left-0 top-8 w-[420px] h-[420px] rounded-full blur-3xl"
+        style={{ background: "radial-gradient(circle at 10% 10%, rgba(99,102,241,0.08), transparent 35%)", opacity: 0.08 }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute right-0 bottom-8 w-[420px] h-[420px] rounded-full opacity-6 blur-3xl"
-        style={{ background: "radial-gradient(circle at 90% 90%, rgba(6,182,212,0.06), transparent 35%)" }}
+        className="pointer-events-none absolute right-0 bottom-8 w-[420px] h-[420px] rounded-full blur-3xl"
+        style={{ background: "radial-gradient(circle at 90% 90%, rgba(6,182,212,0.06), transparent 35%)", opacity: 0.06 }}
       />
 
       <div className="w-full px-6 lg:px-12 xl:px-20">
@@ -63,22 +64,22 @@ export default function WhyChooseUs() {
 
             {/* CTA strip */}
             <div className="mt-8 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-              <span
+              <button
                 onClick={() => navigate("/services")}
-                className="inline-flex items-center gap-3 px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 text-white font-semibold shadow-lg hover:translate-y-[-3px] transition"
+                className="inline-flex items-center gap-3 px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 text-white font-semibold shadow-lg transform-gpu transition-transform hover:-translate-y-1"
               >
                 Explore Services
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </span>
+              </button>
 
-              <span
-               onClick={() => navigate("/contact")}
+              <button
+                onClick={() => navigate("/contact")}
                 className="inline-flex items-center px-4 py-3 rounded-xl bg-white/10 border border-white/8 text-slate-900 hover:bg-white/20 transition"
               >
                 Contact Us
-              </span>
+              </button>
             </div>
           </div>
         </div>
@@ -89,13 +90,14 @@ export default function WhyChooseUs() {
 
 /* --------------------------------
    VisualArea - large image with parallax hover + subtle animation
+   Responsive-focused tweaks only:
 -----------------------------------*/
 function VisualArea() {
   const ref = useRef<HTMLDivElement | null>(null);
   const [par, setPar] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    const el: any = ref.current;
+    const el:any = ref.current;
     if (!el) return;
     function onMove(e: MouseEvent) {
       const r = el.getBoundingClientRect();
@@ -115,25 +117,27 @@ function VisualArea() {
   return (
     <div ref={ref} className="lg:col-span-7 col-span-12 order-1 lg:order-2">
       <div className="relative w-full">
-        {/* Main image card */}
         <motion.div
           style={{ x: par.x, y: par.y }}
           animate={{ x: par.x, y: par.y }}
           transition={{ type: "spring", stiffness: 160, damping: 18 }}
-          className="rounded-3xl overflow-hidden shadow-2xl border border-white/8 bg-white/20"
+          className="rounded-3xl overflow-hidden shadow-2xl border border-white/8 bg-white/20 w-full"
         >
-          <img
-            src={"https://www.pngitem.com/pimgs/m/347-3474591_doctors-22x-stock-photography-hd-png-download.png"}
-            alt="Why Choose Us"
-            className="w-full h-[520px] md:h-[620px] lg:h-full object-cover object-center"
-          />
+          <div className="w-full h-[360px] sm:h-[520px] md:h-[620px] lg:h-[720px]">
+            <img
+              src={"https://www.pngitem.com/pimgs/m/347-3474591_doctors-22x-stock-photography-hd-png-download.png"}
+              alt="Why Choose Us"
+              className="w-full h-full object-cover object-center"
+            />
+          </div>
         </motion.div>
 
-        {/* floating badge */}
+        {/* floating badge: conservative offsets on small screens */}
         <motion.div
           animate={{ y: [0, -8, 0] }}
           transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-          className="absolute left-6 top-6 inline-flex items-center gap-3 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-md border border-white/20"
+          className="absolute left-4 top-4 sm:left-6 sm:top-6 inline-flex items-center gap-3 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-md border border-white/20"
+          style={{ WebkitBackdropFilter: "blur(6px)" }}
         >
           <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-cyan-400 flex items-center justify-center text-white font-semibold">
             24
@@ -149,12 +153,23 @@ function VisualArea() {
 }
 
 /* --------------------------------
-   TiltCard - benefit item with small 3D tilt/translate on mouse move
-   -> now includes highlights list under description
+   TiltCard - fix responsive overflow and right-side clipping
 -----------------------------------*/
 function TiltCard({ item, index }: { item: any; index: number }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, tx: 0, ty: 0 });
+  const [enableTilt, setEnableTilt] = useState<boolean>(true);
+
+  useEffect(() => {
+    let isCoarse = false;
+    try {
+      isCoarse = typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    } catch (e) {
+      isCoarse = false;
+    }
+    const smallWidth = typeof window !== "undefined" && window.innerWidth < 768;
+    setEnableTilt(!(isCoarse || smallWidth));
+  }, []);
 
   useEffect(() => {
     const el = ref.current;
@@ -169,6 +184,7 @@ function TiltCard({ item, index }: { item: any; index: number }) {
   }, []);
 
   const handleMove = (e: React.MouseEvent) => {
+    if (!enableTilt) return;
     const el = ref.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
@@ -188,22 +204,22 @@ function TiltCard({ item, index }: { item: any; index: number }) {
       initial="hidden"
       whileInView="show"
       viewport={{ once: true }}
-      onMouseMove={handleMove}
-      className="relative group"
-      style={{ perspective: 1000 }}
+      onMouseMove={enableTilt ? handleMove : undefined}
+      className="relative group w-full"
+      style={{ perspective: enableTilt ? 1000 : undefined }}
     >
       {/* base card */}
       <div
         className={`
           relative rounded-xl overflow-hidden p-5 bg-white/50 backdrop-blur-md border border-white/8
-          shadow-[0_10px_40px_rgba(15,23,42,0.06)] transition-transform duration-300
+          shadow-[0_10px_40px_rgba(15,23,42,0.06)] transition-shadow duration-300
           hover:shadow-[0_20px_60px_rgba(99,102,241,0.08)]
         `}
         tabIndex={0}
         role="article"
         aria-label={item.heading}
       >
-        {/* moving inner */}
+        {/* moving inner - ensure children can shrink to avoid overflow */}
         <motion.div
           animate={{
             rotateX: tilt.rx,
@@ -212,15 +228,15 @@ function TiltCard({ item, index }: { item: any; index: number }) {
             y: tilt.ty,
           }}
           transition={{ type: "spring", stiffness: 220, damping: 26 }}
-          className="relative z-10 flex items-start gap-4"
+          className="relative z-10 flex items-start gap-4 min-w-0"
         >
           {/* Icon */}
           <div className="flex-none w-14 h-14 rounded-lg bg-gradient-to-tr from-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-md">
             <img src={item.image} alt={item.heading} className="w-8 h-8 object-contain" />
           </div>
 
-          {/* Content */}
-          <div className="flex-1">
+          {/* Content - allow shrinking so long text/button don't overflow */}
+          <div className="flex-1 min-w-0">
             <h3 className="text-lg font-semibold text-slate-900">{item.heading}</h3>
             <p className="text-sm text-slate-600 mt-1">{item.description}</p>
 
@@ -240,12 +256,13 @@ function TiltCard({ item, index }: { item: any; index: number }) {
 
             <div className="mt-3 flex items-center gap-3">
               {item.badge && (
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/8 text-sm font-medium">
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/8 text-sm font-medium flex-shrink-0">
                   {item.badge}
                 </span>
               )}
+              {/* make CTA not push layout (flex-none) */}
               <button
-                className="ml-auto inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 to-cyan-400 text-white text-sm font-semibold shadow-sm hover:translate-y-[-2px] transition"
+                className="ml-auto flex-none inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 to-cyan-400 text-white text-sm font-semibold shadow-sm transform-gpu transition-transform hover:-translate-y-0.5"
                 onClick={() => (window.location.href = item.link ?? "/services")}
                 type="button"
               >
@@ -257,12 +274,15 @@ function TiltCard({ item, index }: { item: any; index: number }) {
 
         {/* gradient glow overlay appears on hover */}
         <div
-          className="absolute inset-0 rounded-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-400"
+          className="absolute inset-0 rounded-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{ background: "linear-gradient(120deg, rgba(99,102,241,0.06), rgba(6,182,212,0.04))" }}
         />
 
-        {/* subtle accent floating element */}
-        <div className="absolute -right-8 -top-6 w-28 h-28 rounded-full opacity-0 group-hover:opacity-60 blur-3xl pointer-events-none" style={{ background: "radial-gradient(circle at 30% 30%, rgba(99,102,241,0.08), transparent 45%)" }} />
+        {/* subtle accent floating element - responsive positioning to avoid overflow on small screens */}
+        <div
+          className="absolute right-4 lg:-right-8 -top-6 w-28 h-28 rounded-full opacity-0 group-hover:opacity-60 blur-3xl pointer-events-none"
+          style={{ background: "radial-gradient(circle at 30% 30%, rgba(99,102,241,0.08), transparent 45%)" }}
+        />
       </div>
     </motion.div>
   );

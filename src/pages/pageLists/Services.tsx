@@ -147,11 +147,7 @@ export default function Services() {
 
   // If no id → Show all services list
   if (!id) {
-    return (
-      <>
-        <ServicesPremium services={SERVICES} />
-      </>
-    );
+    return <ServicesPremium services={SERVICES} />;
   }
 
   // If id exists → find the service
@@ -175,10 +171,10 @@ export default function Services() {
   }
 
   // =========================
-  // SINGLE SERVICE DETAILS VIEW
+  // SINGLE SERVICE DETAILS VIEW (FULL WIDTH, RESPONSIVE)
   // =========================
   return (
-    <div className="py-12 px-4 md:px-8 lg:px-16 max-w-6xl mx-auto">
+    <div className="w-full px-10 sm:px-10 lg:px-10 py-10">
       <button
         onClick={() => navigate(-1)}
         className="inline-flex items-center gap-2 text-sm text-gray-700 mb-6 hover:underline"
@@ -186,24 +182,25 @@ export default function Services() {
         ← Back
       </button>
 
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden w-full">
+        <div className="flex flex-col md:flex-row w-full">
 
-          {/* Image */}
-          <div className="relative h-64 md:h-auto">
+          {/* IMAGE COLUMN */}
+          <div className="w-full md:w-1/2 h-64 md:h-auto relative flex-shrink-0">
             <img
               src={service.image}
               alt={service.title}
-              className="w-full h-full object-cover md:rounded-l-2xl"
+              loading="lazy"
+              className="w-full h-full object-cover block"
             />
 
-            <span className="absolute top-4 left-4 bg-white/90 text-sm text-primary font-semibold px-3 py-1 rounded-full shadow">
+            <span className="absolute top-4 left-4 bg-white/95 text-sm text-primary font-semibold px-3 py-1 rounded-full shadow">
               {service.title}
             </span>
           </div>
 
-          {/* Content */}
-          <div className="p-6 md:p-10 flex flex-col">
+          {/* CONTENT COLUMN */}
+          <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col">
             <h1 className="text-2xl md:text-3xl font-bold text-primary mb-3">
               {service.title}
             </h1>
@@ -214,15 +211,15 @@ export default function Services() {
 
             <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3">
               <button
-                onClick={() => navigate("/app/doctor-details/" + id)}
-                className="inline-block px-5 py-3 bg-primary text-white rounded-lg shadow hover:scale-[1.02] transition-transform"
+                onClick={() => navigate(`/app/doctor-details/${id}`)}
+                className="w-full sm:w-auto inline-block px-5 py-3 bg-primary text-white rounded-lg shadow hover:scale-[1.02] transition-transform text-center"
               >
                 Book Appointment
               </button>
 
               <a
                 href="/app/contact"
-                className="text-sm text-primary underline hover:opacity-90"
+                className="w-full sm:w-auto text-center text-sm text-primary underline hover:opacity-90"
               >
                 Contact department
               </a>
@@ -230,11 +227,9 @@ export default function Services() {
 
             {service.tests && (
               <div className="mt-8">
-                <h4 className="text-sm font-semibold text-gray-800 mb-2">
-                  Common Tests & Procedures
-                </h4>
+                <h4 className="text-sm font-semibold text-gray-800 mb-2">Common Tests & Procedures</h4>
 
-                <ul className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
                   {service.tests.map((test, index) => (
                     <li key={index} className="px-3 py-2 bg-gray-50 rounded">
                       {test}
@@ -246,8 +241,7 @@ export default function Services() {
 
             <div id="contact" className="mt-auto pt-6">
               <p className="text-xs text-gray-500">
-                For urgent care call:{" "}
-                <span className="font-medium text-gray-800">+91 82480 40188</span>
+                For urgent care call: <span className="font-medium text-gray-800">+91 82480 40188</span>
               </p>
             </div>
           </div>
@@ -257,4 +251,3 @@ export default function Services() {
     </div>
   );
 }
-

@@ -51,8 +51,8 @@ export default function ContactPremium() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F6F8FF] via-white to-[#F3F6FF]">
       {/* Hero */}
-      <header className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 py-20 lg:py-28">
+      <header className="w-full relative overflow-hidden">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7">
               <motion.h1 initial={{ y: 8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }} className="text-4xl md:text-5xl font-extrabold text-[#231F53] leading-tight">
@@ -110,8 +110,8 @@ export default function ContactPremium() {
       </header>
 
       {/* Main content */}
-      <main className="-mt-12">
-        <div className="max-w-7xl mx-auto px-6 pb-20">
+      <main className="-mt-12 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-8 pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Form column (larger) */}
             <div className="lg:col-span-2">
