@@ -2,14 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@theme {
+  --color-primary: #231f53;
+  --color-secondary: #ecb14c;
+}
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: "Outfit", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+   background-color: transparent;
 }
 
 code {

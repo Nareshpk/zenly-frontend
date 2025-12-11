@@ -35,7 +35,7 @@ export const loginAction = (credentials: any) => {
         "auth",
         JSON.stringify({ isAuthenticated: true, user: decodedToken })
       );
-      return dispatch(loginSuccess(response.data));
+      return dispatch(loginSuccess({type: "LOGIN_SUCCESS", payload: response.data}));
     } catch (error: any) {
       dispatch(loginFailure(error.response.data));
     }

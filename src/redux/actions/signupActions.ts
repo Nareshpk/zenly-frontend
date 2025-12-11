@@ -31,7 +31,7 @@ export const signup = (formData: any) => async (dispatch: any) => {
       }
     );
 
-    dispatch({ type: "SIGNUP_SUCCESS", payload: response.data });
+    return dispatch({ type: "SIGNUP_SUCCESS", payload: response.data });
   } catch (error: any) {
     console.error("Signup error:", error);
     dispatch({

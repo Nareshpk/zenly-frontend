@@ -1,7 +1,16 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { specialtiesData } from '../assets/assets';
+type User = { id?: string; name?: string; email?: string } | null;
+export type Specialty = { id: string; name: string };
+
 type DataContextType = {
-  data: any
-  setData: React.Dispatch<any>
+  user: User;
+  setUser: (u: User) => void;
+  doctor: boolean;
+  setDoctor: (v: boolean) => void;
+  loading: boolean;
+  setLoading: (v: boolean) => void;
+  healthSpecialties: Specialty[];
 }
 const DataContext = createContext<DataContextType | null>(null)
 interface props {
@@ -9,13 +18,24 @@ interface props {
 }
 
 const DataProvider = ({ children }: props) => {
-     const [data, setData] = useState<any>(null)
-       return (
+  const [loading, setLoading] = useState<boolean>(false);
+  const [user, setUser] = useState<User>(null);
+  const [doctor, setDoctor] = useState<boolean>(true);
+  const [healthSpecialties, setHealthSpecialties] = useState<Specialty[]>([]);
+  useEffect(() => {
+    setHealthSpecialties(specialtiesData as Specialty[]);
+  }, []);
+  return (
     <div>
       <DataContext.Provider
         value={{
-          data,
-          setData,
+          user,
+          setUser,
+          doctor,
+          setDoctor,
+          loading,
+          setLoading,
+          healthSpecialties,
 
         }}
       >

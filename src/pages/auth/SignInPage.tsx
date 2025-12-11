@@ -36,10 +36,13 @@ export default function SignInPage() {
         try {
             const email = values.email;
             const password = values.password
-            dispatch(loginAction({ email, password }) as any).then((res: any) => {
-                console.log("res===========>>", res);
-                navigate("/app/dashboard");
-            });
+            // dispatch(loginAction({ email, password }) as any).then((res: any) => {
+            //     if (res.type === "LOGIN_FAILURE") {
+            //         setServerError(res.payload.message || "Login failed. Please try again.");
+            //         return;
+            //     }
+            //     navigate("/app/dashboard");
+            // });
         } catch (error) {
             console.error("Error during login:", error);
             setServerError("An error occurred. Please try again.");
