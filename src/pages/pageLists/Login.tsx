@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Hospital, Lock, MailIcon, User2Icon } from "lucide-react";
+import { Eye, EyeOff, Hospital, Lock, MailIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
@@ -16,7 +17,6 @@ export default function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    role: "",
     remember: false,
   });
 
@@ -25,7 +25,7 @@ export default function Login() {
 
   useEffect(() => {
     // prefill role if you want (example: patient)
-    setFormData((f) => ({ ...f, role: f.role || "patient" }));
+    setFormData((f) => ({ ...f }));
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -40,7 +40,6 @@ export default function Login() {
     if (!formData.email) next.email = "Email is required";
     else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(formData.email)) next.email = "Enter a valid email";
     if (!formData.password) next.password = "Password is required";
-    if (!formData.role) next.role = "Please select a role";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -55,11 +54,15 @@ export default function Login() {
     try {
       setLoading?.(true);
       dispatch(loginAction({ email: formData.email, password: formData.password }) as any).then((res: any) => {
-        if (res.type === "LOGIN_SUCCESS") {
+        
+        if (res?.type === "LOGIN_SUCCESS") {
           toast.success("Login successful");
           setUser?.(true as any);
           if (formData.remember) localStorage.setItem("hospital_remember", formData.email);
-          navigate("/app/my-appointments");
+          if (res.role === "admin") navigate("/admin/dashboard");
+          else if (res.role === "doctor") navigate("/doctor/doctor-dashboard");
+          else navigate("/app/my-appointments");
+            
         }
       });
 
@@ -136,27 +139,6 @@ export default function Login() {
                 />
               </div>
               {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
-            </label>
-
-            <label className="block">
-              <span className="text-xs text-gray-600">Role</span>
-              <div className="mt-2 flex items-center bg-gray-50 border rounded-full h-11 px-4">
-                <User2Icon className="w-5 h-5 text-gray-400" />
-                <select
-                  aria-label="Role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="bg-transparent ml-3 outline-none text-sm w-full"
-                >
-                  <option value="">Select role</option>
-                  <option value="patient">Patient</option>
-                  <option value="doctor">Doctor</option>
-                  <option value="admin">Admin</option>
-                  <option value="staff">Staff</option>
-                </select>
-              </div>
-              {errors.role && <p className="text-xs text-red-500 mt-1">{errors.role}</p>}
             </label>
 
             <label className="block">

@@ -10,7 +10,8 @@ export const loginRequest = () => ({
 
 export const loginSuccess = (userData: any) => ({
   type: LOGIN_SUCCESS,
-  payload: userData,
+  role: userData.role,
+  payload: userData.payload,
 });
 
 export const loginFailure = (error: any) => ({
@@ -26,16 +27,14 @@ export const loginAction = (credentials: any) => {
         `${process.env.REACT_APP_BASE_URL}/api/auth/login`,
         credentials
       );
-
-      // Save token and user data to localStorage
-      const { token } = response.data;
+      const { token, role } = response.data;
       localStorage.setItem("bearerToken", JSON.stringify(token));
       const decodedToken = jwtDecode(token); // Decode the token
       localStorage.setItem(
         "auth",
-        JSON.stringify({ isAuthenticated: true, user: decodedToken })
+        JSON.stringify({ isAuthenticated: true, role: role, user: decodedToken })
       );
-      return dispatch(loginSuccess({type: "LOGIN_SUCCESS", payload: response.data}));
+      return dispatch(loginSuccess({ type: "LOGIN_SUCCESS", role: role, payload: response.data }));
     } catch (error: any) {
       dispatch(loginFailure(error.response.data));
     }
