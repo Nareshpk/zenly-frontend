@@ -15,25 +15,42 @@ import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { doctorsData } from "../../assets/assets";
+import { useDispatch } from "react-redux";
+import { getDoctorAppointmentById, getDoctorById } from "../../redux/actions/doctorProfileAction";
+import { createAppointment } from "../../redux/actions/appointmentActions";
+import { getUserProfile } from "../../redux/actions/userProfileAction";
 
 
 
 export default function DoctorDetails() {
-  const { id } = useParams();
+  const authString = localStorage.getItem("auth");
+  const parsedAuth = authString ? JSON.parse(authString) : null;
+  const userId = parsedAuth?.user?.id
+  const dispatch = useDispatch();
+  const { id } = useParams() as any;
   const navigate = useNavigate();
+  const [doctorDetails, setDoctorDetails] = useState(null as any);
 
   const doctor: any = doctorsData.find((d: any) => String(d._id) === String(id)) || doctorsData[0];
 
   // Form state
+  const [profile, setProfile] = useState(null as any);
   const [booking, setBooking] = useState({
+    appointmentNo: `APT-${Date.now()}`,
     patientName: "",
-    phone: "",
     email: "",
+    age: "",
+    sex: "",
+    bloodGroup: "",
+    address: "",
+    appointmentType: "Video Call",
     date: "",
     time: "",
-    symptoms: "",
+    consultationFor: "",
+    status: "Pending",
     paymentMethod: "cash",
   });
+
 
   useEffect(() => {
     // prefill date to today for convenience
@@ -47,19 +64,35 @@ export default function DoctorDetails() {
   };
 
   const submit = () => {
-    if (!booking.patientName || !booking.phone || !booking.email || !booking.date || !booking.time) {
-      toast.error("Please complete the highlighted fields.");
-      return;
+    const payload = {
+      doctorId: id,
+      patientId: parsedAuth.user.id,
+      email: booking?.email,
+      age: booking?.age,
+      sex: booking?.sex,
+      bloodGroup: booking?.address,
+      address: booking?.address,
+      appointmentNo: booking?.appointmentNo,
+      patientName: booking.patientName,
+      doctorName: doctorDetails?.displayName ?? "",
+      appointmentType: booking.appointmentType,
+      date: booking.date,
+      time: booking?.time,
+      consultationFor: booking?.consultationFor,
+      status: "Pending",
+      specialties: doctorDetails?.specialties[0]?.title,
+      clinics: doctorDetails?.clinics[0]?.name,
+      location: doctorDetails?.clinics[0]?.location
     }
-
-    // simulate booking action
-    console.log("Booked:", { doctor: doctor.name, ...booking });
-    toast.success(`Appointment confirmed with ${doctor.name}`);
-    setBooking({ patientName: "", phone: "", email: "", date: "", time: "", symptoms: "", paymentMethod: "cash" });
-    navigate("/my-appointments");
+    dispatch(createAppointment(payload) as any).then((res: any) => {
+      if (res.type === "APPOINTMENT_CREATE_SUCCESS") {
+        toast.success("Requset Send Seccessfully!")
+        navigate('/app/my-appointments')
+      }
+    }).catch((error: any) => {
+      console.log("error=======================>>>" + error)
+    });
   };
-
-  const timeSlots = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"];
 
   const renderStars = (rating: number) => (
     <div className="flex items-center gap-1">
@@ -69,6 +102,34 @@ export default function DoctorDetails() {
       <span className="ml-2 text-sm text-gray-600">{rating.toFixed(1)}</span>
     </div>
   );
+
+
+  useEffect(() => {
+    dispatch(getDoctorAppointmentById(id) as any).then((action: any) => {
+      if (action.type === "DOCTOR_DETAILS_APPOINTMENT_SUCCESS") {
+        setDoctorDetails(action.payload)
+      }
+    });
+
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    dispatch(getUserProfile(userId) as any).then((res: any) => {
+      if (res?.profile) {
+        setBooking((prev) => ({
+          ...prev,
+          patientName: parsedAuth?.user?.name || "",
+          email: parsedAuth?.user?.email || "",
+          sex: res.profile.sex || "",
+          age: res.profile.age || "", // ✅ FIXED
+          bloodGroup: res.profile.bloodGroup || "",
+          address: res.profile.address || "",
+        }));
+      }
+    });
+  }, [userId, dispatch]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
@@ -98,14 +159,14 @@ export default function DoctorDetails() {
               <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                 <div className="relative">
                   <div className="rounded-full p-1 bg-gradient-to-tr from-primary to-indigo-500 shadow-lg">
-                    <img src={doctor.image} alt={doctor.name} className="w-36 h-36 md:w-44 md:h-44 object-cover rounded-full border-4 border-white" />
+                    <img src={doctor.image} alt={doctorDetails?.displayName} className="w-36 h-36 md:w-44 md:h-44 object-cover rounded-full border-4 border-white" />
                   </div>
                   <div className="absolute -bottom-2 right-0 bg-white rounded-full px-3 py-1 text-xs font-medium shadow">{doctor.yearsActive || "Senior"}</div>
                 </div>
 
                 <div className="flex-1">
-                  <h2 className="text-2xl md:text-3xl font-bold text-slate-800">{doctor.name}</h2>
-                  <p className="text-primary font-semibold mt-1">{doctor.specialty}</p>
+                  <h2 className="text-2xl md:text-3xl font-bold text-slate-800">{doctorDetails?.displayName}</h2>
+                  <p className="text-primary font-semibold mt-1">{doctorDetails?.specialties[0]?.title}</p>
 
                   <div className="mt-4 flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-3 bg-slate-50/60 py-2 px-3 rounded-lg">
@@ -115,17 +176,17 @@ export default function DoctorDetails() {
 
                     <div className="flex items-center gap-3 bg-slate-50/60 py-2 px-3 rounded-lg">
                       <GraduationCap className="w-4 h-4 text-primary" />
-                      <span className="text-sm text-gray-700">{doctor.education}</span>
+                      <span className="text-sm text-gray-700">{doctorDetails?.education[0]?.course + " " + `(${doctorDetails?.specialties[0]?.title})`}</span>
                     </div>
 
-                    <div className="py-2 px-3 rounded-lg bg-slate-50/60 text-sm text-gray-700">{doctor.location}</div>
+                    <div className="py-2 px-3 rounded-lg bg-slate-50/60 text-sm text-gray-700">{doctorDetails?.education[0]?.institution + ", " + doctorDetails?.clinics[0]?.location}</div>
                   </div>
                 </div>
 
                 <div className="hidden md:flex flex-col items-end gap-3">
                   <div className="text-right">
                     <div className="text-sm text-gray-500">Consultation</div>
-                    <div className="text-xl font-semibold text-slate-800">$ {doctor.fees}</div>
+                    <div className="text-xl font-semibold text-slate-800">$ {doctorDetails?.businessHours[0]?.fee}</div>
                   </div>
 
                   <motion.button whileHover={{ scale: 1.03 }} className="bg-primary text-white px-4 py-2 rounded-full shadow" onClick={() => document.getElementById("booking-panel")?.scrollIntoView({ behavior: "smooth" })}>
@@ -146,7 +207,7 @@ export default function DoctorDetails() {
                         <Clock className="w-5 h-5 text-primary" />
                         <h4 className="font-semibold">Experience</h4>
                       </div>
-                      <div className="text-gray-600">{doctor.experience}</div>
+                      <div className="text-gray-600">{doctorDetails?.experiences[0]?.years}</div>
                     </div>
 
                     <div className="p-4 rounded-xl bg-gradient-to-b from-white to-slate-50 border">
@@ -154,7 +215,7 @@ export default function DoctorDetails() {
                         <MapPin className="w-5 h-5 text-primary" />
                         <h4 className="font-semibold">Clinic</h4>
                       </div>
-                      <div className="text-gray-600">{doctor.clinicName || doctor.location}</div>
+                      <div className="text-gray-600">{doctorDetails?.clinics[0]?.name + ", " + doctorDetails?.clinics[0]?.location}</div>
                     </div>
 
                     <div className="p-4 rounded-xl bg-gradient-to-b from-white to-slate-50 border">
@@ -162,7 +223,7 @@ export default function DoctorDetails() {
                         <Mail className="w-5 h-5 text-primary" />
                         <h4 className="font-semibold">Contact</h4>
                       </div>
-                      <div className="text-gray-600 break-words">{doctor.email} • {doctor.phone}</div>
+                      <div className="text-gray-600 break-words">{doctorDetails?.email} • {doctorDetails?.phone}</div>
                     </div>
 
                     <div className="p-4 rounded-xl bg-gradient-to-b from-white to-slate-50 border">
@@ -170,7 +231,7 @@ export default function DoctorDetails() {
                         <Star className="w-5 h-5 text-primary" />
                         <h4 className="font-semibold">Specialties</h4>
                       </div>
-                      <div className="text-gray-600">{(doctor.specialties || [doctor.specialty]).join(", ")}</div>
+                      <div className="text-gray-600">{(doctorDetails?.specialties[0]?.title)}</div>
                     </div>
                   </div>
                 </div>
@@ -191,7 +252,7 @@ export default function DoctorDetails() {
 
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">Languages</span>
-                      <strong className="text-slate-800">{doctor.languages?.join(", ") || "English"}</strong>
+                      <strong className="text-slate-800">{doctorDetails?.languages?.join(", ") || "English"}</strong>
                     </div>
                   </div>
                 </aside>
@@ -204,9 +265,19 @@ export default function DoctorDetails() {
 
         {/* Right / Sticky Booking Panel */}
         <aside id="booking-panel" className="sticky top-24">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-2xl border">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+            className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-2xl border"
+          >
+            {/* Doctor */}
             <div className="flex items-start gap-4">
-              <img src={doctor.image} alt={doctor.name} className="w-14 h-14 object-cover rounded-full border-2 border-white shadow" />
+              <img
+                src={doctor.image}
+                alt={doctor.name}
+                className="w-14 h-14 object-cover rounded-full border-2 border-white shadow"
+              />
               <div>
                 <div className="text-sm text-gray-500">Consult with</div>
                 <div className="font-semibold text-slate-800">{doctor.name}</div>
@@ -214,83 +285,224 @@ export default function DoctorDetails() {
               </div>
             </div>
 
+            {/* Appointment Number */}
             <div className="mt-4">
-              <label className="text-xs font-medium text-gray-600">Patient</label>
-              <div className="mt-2 relative">
-                <User className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-                <input name="patientName" value={booking.patientName} onChange={handleChange} placeholder="Full name" className="w-full pl-10 pr-3 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary" />
-              </div>
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-gray-600">Phone</label>
-                <div className="relative mt-2">
-                  <Phone className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-                  <input name="phone" value={booking.phone} onChange={handleChange} placeholder="Mobile" className="w-full pl-10 pr-3 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary" />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs text-gray-600">Email</label>
-                <div className="relative mt-2">
-                  <Mail className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-                  <input name="email" value={booking.email} onChange={handleChange} placeholder="you@domain.com" className="w-full pl-10 pr-3 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary" />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-gray-600">Date</label>
-                <div className="relative mt-2">
-                  <Calendar className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-                  <input type="date" name="date" value={booking.date} onChange={handleChange} min={new Date().toISOString().split("T")[0]} className="w-full pl-10 pr-3 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary" />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs text-gray-600">Time</label>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {timeSlots.map(t => (
-                    <button key={t} onClick={() => setBooking(b => ({ ...b, time: t }))} className={`px-3 py-2 rounded-full text-sm border ${booking.time === t ? "bg-primary text-white" : "bg-white"}`}>
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <label className="text-xs text-gray-600">Appointment No</label>
+              <input
+                value={booking.appointmentNo}
+                disabled
+                className="w-full mt-2 px-3 py-3 rounded-lg border bg-gray-100"
+              />
             </div>
 
             <div className="mt-3">
-              <label className="text-xs text-gray-600">Symptoms</label>
-              <textarea name="symptoms" value={booking.symptoms} onChange={handleChange} rows={3} className="w-full mt-2 p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Short description..."></textarea>
+              <label className="text-xs text-gray-600">Email</label>
+              <input
+                name="email"
+                value={booking.email}
+                readOnly
+                disabled
+                onChange={handleChange}
+                placeholder="Full name"
+                className="w-full mt-2 px-3 py-3 rounded-lg border focus:ring-2 focus:ring-primary"
+              />
             </div>
 
-            <div className="mt-4 flex items-center justify-between">
+            <div className="mt-3">
+              <label className="text-xs text-gray-600">Patient Name</label>
+              <input
+                name="patientName"
+                value={booking.patientName}
+                readOnly
+                disabled
+                onChange={handleChange}
+                placeholder="Full name"
+                className="w-full mt-2 px-3 py-3 rounded-lg border focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
+            {/* Age & Sex */}
+            <div className="mt-3 grid grid-cols-2 gap-3">
               <div>
-                <div className="text-xs text-gray-500">Fee</div>
-                <div className="text-lg font-semibold">$ {doctor.fees}</div>
+                <label className="text-xs text-gray-600">Age</label>
+                <input
+                  type="text"
+                  name="age"
+                  value={booking.age}
+                  readOnly
+                  disabled
+                  onChange={handleChange}
+                  placeholder="Age"
+                  className="w-full mt-2 px-3 py-3 rounded-lg border focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-600">Sex</label>
+                <input
+                  type="text"
+                  name="sex"
+                  value={booking.sex}
+                  readOnly
+                  disabled
+                  onChange={handleChange}
+                  placeholder="Age"
+                  className="w-full mt-2 px-3 py-3 rounded-lg border focus:ring-2 focus:ring-primary"
+                />
+              </div>
+            </div>
+
+
+            <div className="mt-3">
+              <label className="text-xs text-gray-600">Blood Group</label>
+              <input
+                type="text"
+                name="bloodGroup"
+                value={booking.bloodGroup}
+                readOnly
+                onChange={handleChange}
+                placeholder="Age"
+                className="w-full mt-2 px-3 py-3 rounded-lg border focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
+            <div className="mt-3">
+              <label className="text-xs text-gray-600">Address</label>
+              <textarea
+                name="address"
+                value={booking.address}
+                onChange={handleChange}
+                readOnly
+                disabled
+                rows={3}
+                placeholder="Patient address"
+                className="w-full mt-2 p-3 rounded-lg border focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
+            {/* Doctor Name */}
+            <div className="mt-3">
+              <label className="text-xs text-gray-600">Doctor</label>
+              <input
+                value={doctorDetails?.displayName}
+                disabled
+                className="w-full mt-2 px-3 py-3 rounded-lg border bg-gray-100"
+              />
+            </div>
+
+            {/* Appointment Type */}
+            <div className="mt-3">
+              <label className="text-xs text-gray-600">Type of Appointment</label>
+              <select
+                name="appointmentType"
+                value={booking.appointmentType}
+                onChange={handleChange}
+                className="w-full mt-2 px-3 py-3 rounded-lg border focus:ring-2 focus:ring-primary"
+              >
+                <option value="Video Call">Video Call</option>
+                <option value="Audio Call">Audio Call</option>
+                <option value="Direct Visit">Direct Visit</option>
+              </select>
+            </div>
+
+            {/* Date & Time */}
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-gray-600">Date</label>
+                <input
+                  type="date"
+                  name="date"
+                  value={booking.date}
+                  onChange={handleChange}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="w-full mt-2 px-3 py-3 rounded-lg border"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-600">Time Slot</label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {doctorDetails?.businessHours?.[0]?.slots?.map(
+                    (t: string, i: number) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setBooking({ ...booking, time: t })}
+                        className={`px-3 py-2 rounded-full text-sm border ${booking.time === t
+                          ? "bg-primary text-white"
+                          : "bg-white hover:bg-gray-100"
+                          }`}
+                      >
+                        {t}
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Consultation For */}
+            <div className="mt-3">
+              <label className="text-xs text-gray-600">Consultation For</label>
+              <textarea
+                name="consultationFor"
+                value={booking.consultationFor}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Reason for consultation"
+                className="w-full mt-2 p-3 rounded-lg border focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
+            {/* Status & Payment */}
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-gray-600">Status</label>
+                <input
+                  value={booking.status}
+                  disabled
+                  className="w-full mt-2 px-3 py-3 rounded-lg border bg-gray-100"
+                />
               </div>
 
               <div>
                 <label className="text-xs text-gray-600">Payment</label>
-                <select name="paymentMethod" value={booking.paymentMethod} onChange={handleChange} className="ml-2 px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary">
-                  <option value="cash">Pay at clinic</option>
+                <select
+                  name="paymentMethod"
+                  value={booking.paymentMethod}
+                  onChange={handleChange}
+                  className="w-full mt-2 px-3 py-3 rounded-lg border focus:ring-2 focus:ring-primary"
+                >
+                  <option value="cash">Pay at Clinic</option>
                   <option value="online">Online</option>
                 </select>
               </div>
             </div>
 
-            <button onClick={submit} className="mt-6 w-full py-3 rounded-xl bg-gradient-to-r from-primary to-indigo-600 text-white font-semibold shadow-lg">
-              {booking.paymentMethod === "cash" ? "Confirm & Pay at Clinic" : "Pay Now"}
+            {/* Submit */}
+            <button
+              onClick={submit}
+              className="mt-6 w-full py-3 rounded-xl bg-gradient-to-r from-primary to-indigo-600 text-white font-semibold shadow-lg"
+            >
+              {booking.paymentMethod === "cash"
+                ? "Confirm Appointment"
+                : "Pay & Confirm"}
             </button>
 
-            <p className="text-xs text-gray-500 mt-3">You will receive confirmation by call or email within 24 hours.</p>
+            <p className="text-xs text-gray-500 mt-3">
+              You will receive confirmation within 24 hours.
+            </p>
           </motion.div>
 
-          {/* Small note card */}
-          <div className="mt-4 text-xs text-gray-500">Need help? <a href={`tel:${doctor.phone}`} className="text-primary underline">Call clinic</a></div>
+          <div className="mt-4 text-xs text-gray-500">
+            Need help?{" "}
+            <a href={`tel:${doctor.phone}`} className="text-primary underline">
+              Call clinic
+            </a>
+          </div>
         </aside>
+
+
       </main>
 
       <footer className="max-w-6xl mx-auto px-4 pb-12 text-center text-sm text-gray-500">© {new Date().getFullYear()} HealthPlatform — Premium experience</footer>

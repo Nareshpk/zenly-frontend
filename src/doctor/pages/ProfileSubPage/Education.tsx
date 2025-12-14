@@ -21,7 +21,7 @@ function uid() {
     return Math.random().toString(36).slice(2, 9);
 }
 
-export default function Education() {
+export default function Education({doctorDetails}:any) {
     const dispatch = useDispatch();
     const [items, setItems] = useState<EducationItem[]>([
         {

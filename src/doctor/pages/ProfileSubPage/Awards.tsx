@@ -16,7 +16,7 @@ function uid() {
   return Math.random().toString(36).slice(2, 9);
 }
 
-export default function Awards() {
+export default function Awards({doctorDetails}:any) {
   const dispatch = useDispatch();
   const [items, setItems] = useState<AwardItem[]>([
     { id: uid(), name: "", year: "", description: "", collapsed: false },

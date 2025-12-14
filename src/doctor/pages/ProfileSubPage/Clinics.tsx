@@ -19,7 +19,7 @@ function uid() {
   return Math.random().toString(36).slice(2, 9);
 }
 
-export default function Clinics() {
+export default function Clinics({doctorDetails}:any) {
   const dispatch = useDispatch();
   const [items, setItems] = useState<ClinicItem[]>([
     {

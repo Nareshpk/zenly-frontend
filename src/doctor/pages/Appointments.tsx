@@ -1,37 +1,48 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Search, Calendar, Grid, List, Filter, Eye, Phone, Mail, Video, Headphones, Clock, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-type Appointment = {
-  id: string;
-  aptNo: string;
-  name: string;
-  avatar?: string;
-  date: string; // display
-  types: string[]; // e.g. ['General Visit','Video Call']
-  email?: string;
-  phone?: string;
-  tag?: string; // e.g. 'New'
-};
-
-const SAMPLE: Appointment[] = [
-  { id: "1", aptNo: "Apt0001", name: "Adrian", avatar: "https://i.pravatar.cc/64?img=5", date: "11 Nov 2025 10.45 AM", types: ["General Visit", "Video Call"], email: "adrian@example.com", phone: "+1 504 368 6874" },
-  { id: "2", aptNo: "Apt0002", name: "Kelly", avatar: "https://i.pravatar.cc/64?img=8", date: "05 Nov 2025 11.50 AM", types: ["General Visit", "Audio Call"], email: "kelly@example.com", phone: "+1 832 891 8403", tag: "New" },
-  { id: "3", aptNo: "Apt0003", name: "Samuel", avatar: "https://i.pravatar.cc/64?img=10", date: "27 Oct 2025 09.30 AM", types: ["General Visit", "Video Call"], email: "samuel@example.com", phone: "+1 749 104 6291" },
-  { id: "4", aptNo: "Apt0004", name: "Catherine", avatar: "https://i.pravatar.cc/64?img=9", date: "18 Oct 2025 12.20 PM", types: ["General Visit", "Direct Visit"], email: "catherine@example.com", phone: "+1 584 920 7183" },
-];
+import { getAppointmentsByDoctor } from "../../redux/actions/appointmentActions";
+import { useData } from "../../shared/DataProvider";
+import { useDispatch } from "react-redux";
+import { getUserProfile } from "../../redux/actions/userProfileAction";
 
 export default function Appointments() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { docId, setDocId } = useData() as any;
+  const authString = localStorage.getItem("auth");
+  const parsedAuth = authString ? JSON.parse(authString) : null;
+  const userId = parsedAuth?.user?.id
+  const docdetails = localStorage.getItem("docId");
+  const getdocdetails = docdetails ? JSON.parse(docdetails) : null;
+
+  const [items, setItems] = useState<Request[]>([]);
+
   const [view, setView] = useState<"list" | "grid">("list");
   const [tab, setTab] = useState<"Upcoming" | "Cancelled" | "Completed">("Upcoming");
   const [q, setQ] = useState("");
 
-  const filtered = SAMPLE.filter((a) => {
+  const filtered = items?.filter((a: any) => {
     if (!q.trim()) return true;
     const s = q.toLowerCase();
-    return a.name.toLowerCase().includes(s) || a.aptNo.toLowerCase().includes(s) || a.email?.toLowerCase().includes(s);
+    return a.patientName.toLowerCase().includes(s) || a.appointmentNo.toLowerCase().includes(s) || a.email?.toLowerCase().includes(s);
   });
+
+
+  const getRequests = async () => {
+    dispatch(getAppointmentsByDoctor(docId?._id ?? getdocdetails?._id) as any)
+      .then((res: any) => {
+        if (res.type === "APPOINTMENT_LIST_SUCCESS") {
+          setItems(res.payload);
+        }
+      })
+      .catch((err: any) => console.error(err));
+  };
+
+  useEffect(() => {
+    getRequests();
+  }, []);
+
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -73,16 +84,20 @@ export default function Appointments() {
       {/* List view */}
       {view === "list" ? (
         <div className="space-y-4">
-          {filtered.map((a) => (
-            <div key={a.id} className="bg-white rounded-lg border p-4 flex items-center gap-4">
-              <img src={a.avatar} alt={a.name} className="w-16 h-16 rounded-lg object-cover" />
+          {filtered.map((a: any) => (
+            <div key={a._id} className="bg-white rounded-lg border p-4 flex items-center gap-4">
+              <img
+                src={`http://localhost:5000${a.avatar}`}
+                alt={a.name}
+                className="w-16 h-16 rounded-lg object-cover"
+              />
 
               <div className="flex-1">
                 <div className="flex items-start justify-between">
                   <div>
-                    <div className="text-xs text-sky-600">#{a.aptNo}</div>
-                    <div className="text-lg font-semibold text-slate-800">{a.name} {a.tag && <span className="ml-2 inline-block bg-purple-500 text-white text-xs px-2 py-0.5 rounded">{a.tag}</span>}</div>
-                    <div className="text-sm text-slate-500 mt-1">{a.types.join("  |  ")}</div>
+                    <div className="text-xs text-sky-600">#{a.appointmentNo}</div>
+                    <div className="text-lg font-semibold text-slate-800">{a.patientName} {!a?.tag && <span className="ml-2 inline-block bg-purple-500 text-white text-xs px-2 py-0.5 rounded">{"New"}</span>}</div>
+                    <div className="text-sm text-slate-500 mt-1">{"General Visit | " + a.appointmentType}</div>
                   </div>
 
                   <div className="text-sm text-right">
@@ -110,14 +125,14 @@ export default function Appointments() {
       ) : (
         /* Grid / card view */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((a) => (
-            <div key={a.id} className="bg-white rounded-lg border p-4">
+          {filtered.map((a: any) => (
+            <div key={a?._id} className="bg-white rounded-lg border p-4">
               <div className="flex items-start gap-3">
                 <img src={a.avatar} alt={a.name} className="w-14 h-14 rounded-lg object-cover" />
                 <div className="flex-1">
-                  <div className="text-xs text-sky-600">#{a.aptNo}</div>
-                  <div className="text-lg font-semibold">{a.name}</div>
-                  <div className="text-sm text-slate-500 mt-1">{a.types.join("  |  ")}</div>
+                  <div className="text-xs text-sky-600">#{a.appointmentNo}</div>
+                  <div className="text-lg font-semibold">{a.patientName}</div>
+                  <div className="text-sm text-slate-500 mt-1">{"General Visit | " + a.appointmentType}</div>
 
                   <div className="mt-3 bg-sky-50 rounded-md p-3 text-sm">
                     <div className="flex items-center gap-3"><Clock size={16} /> {a.date}</div>
@@ -125,7 +140,7 @@ export default function Appointments() {
                   </div>
 
                   <div className="mt-3 flex items-center justify-between">
-                    <span onClick={()=>navigate("/doctor/doctor-appointment-details")} className="text-sm font-medium text-sky-600">Start Now</span>
+                    <span onClick={() => navigate("/doctor/doctor-appointment-details")} className="text-sm font-medium text-sky-600">Start Now</span>
                     <div className="flex items-center gap-2">
                       <button className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center"><Eye size={16} /></button>
                       <button className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center"><Video size={16} /></button>

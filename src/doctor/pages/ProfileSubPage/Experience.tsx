@@ -20,7 +20,7 @@ type ExperienceItem = {
     collapsed?: boolean;
 };
 
-export default function Experience() {
+export default function Experience({doctorDetails}:any) {
     const dispatch = useDispatch();
     const [items, setItems] = useState<ExperienceItem[]>([
         {

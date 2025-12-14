@@ -16,7 +16,7 @@ function uid() {
     return Math.random().toString(36).slice(2, 9);
 }
 
-export default function Insurance() {
+export default function Insurance({doctorDetails}:any) {
     const dispatch = useDispatch();
     const [items, setItems] = useState<InsuranceItem[]>([
         { id: uid(), logoPreview: null, name: "", collapsed: false },

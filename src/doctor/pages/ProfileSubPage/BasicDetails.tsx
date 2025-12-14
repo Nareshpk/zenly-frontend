@@ -1,54 +1,51 @@
-import { ImagePlus, Plus } from 'lucide-react';
-import React, { ChangeEvent, use, useState } from 'react'
-import { useDispatch } from 'react-redux';
-import { saveBasicDetails } from '../../../redux/actions/doctorProfileAction';
-import { toast } from 'react-hot-toast';
+/* eslint-disable jsx-a11y/alt-text */
+import { ImagePlus, Plus } from "lucide-react";
+import { ChangeEvent, useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { saveBasicDetails } from "../../../redux/actions/doctorProfileAction";
 
-type Membership = { id: string; title: string; about: string };
-function BasicDetails() {
+/* ---------------- Types ---------------- */
+type Membership = {
+    id: string;
+    title: string;
+    about: string;
+};
+
+
+
+/* ---------------- Component ---------------- */
+function BasicDetails({ doctorDetails, userDetails }: any) {
     const dispatch = useDispatch();
-    // Profile image
+
+    /* ---------- Utils ---------- */
+    function uid() {
+        return Math.random().toString(36).slice(2, 9);
+    }
+
+    /* ---------- Profile image ---------- */
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [imageError, setImageError] = useState<string | null>(null);
 
-    // Basic info
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [displayName, setDisplayName] = useState("");
-    const [designation, setDesignation] = useState("");
-    const [phone, setPhone] = useState("");
-    const [email, setEmail] = useState("");
-
-    // languages (simple tag input)
-    const [languageInput, setLanguageInput] = useState("");
-    const [languages, setLanguages] = useState<string[]>(["English"]);
-
-    // memberships
-    const [memberships, setMemberships] = useState<Membership[]>([
-        { id: id(), title: "", about: "" },
-    ]);
-
-    function id() {
-        return Math.random().toString(36).slice(2, 9);
-    }
-
     function onImageChange(e: ChangeEvent<HTMLInputElement>) {
         setImageError(null);
-        const f = e.target.files?.[0];
-        if (!f) return;
-        if (f.size > 4 * 1024 * 1024) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 4 * 1024 * 1024) {
             setImageError("Image should be below 4 MB.");
             return;
         }
+
         const allowed = ["image/jpeg", "image/png", "image/svg+xml"];
-        if (!allowed.includes(f.type)) {
+        if (!allowed.includes(file.type)) {
             setImageError("Accepted formats: jpg, png, svg");
             return;
         }
-        setImageFile(f);
-        const url = URL.createObjectURL(f);
-        setImagePreview(url);
+
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
     }
 
     function removeImage() {
@@ -56,6 +53,17 @@ function BasicDetails() {
         setImagePreview(null);
         setImageError(null);
     }
+
+    /* ---------- Basic info ---------- */
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [displayName, setDisplayName] = useState("");
+    const [designation, setDesignation] = useState("");
+    const [phone, setPhone] = useState("");
+    const [email, setEmail] = useState("");
+
+    const [languageInput, setLanguageInput] = useState("");
+    const [languages, setLanguages] = useState<string[]>([]);
 
     function addLanguage() {
         const val = languageInput.trim();
@@ -69,20 +77,43 @@ function BasicDetails() {
         setLanguages((s) => s.filter((x) => x !== l));
     }
 
+    /* ---------- Specialties (NEW) ---------- */
+    const [specialtyInput, setSpecialtyInput] = useState("");
+    const [specialties, setSpecialties] = useState<string[]>([]);
+
+    function addSpecialty() {
+        const val = specialtyInput.trim();
+        if (val && !specialties.includes(val)) {
+            setSpecialties((s) => [...s, val]);
+        }
+        setSpecialtyInput("");
+    }
+
+    function removeSpecialty(s: string) {
+        setSpecialties((prev) => prev.filter((x) => x !== s));
+    }
+
+    /* ---------- Memberships ---------- */
+    const [memberships, setMemberships] = useState<Membership[]>([
+        { id: uid(), title: "", about: "" },
+    ]);
+
     function addMembership() {
-        setMemberships((s) => [...s, { id: id(), title: "", about: "" }]);
+        setMemberships((s) => [...s, { id: uid(), title: "", about: "" }]);
     }
 
-    function updateMembership(id_: string, patch: Partial<Membership>) {
-        setMemberships((s) => s.map((m) => (m.id === id_ ? { ...m, ...patch } : m)));
+    function updateMembership(id: string, patch: Partial<Membership>) {
+        setMemberships((s) =>
+            s.map((m) => (m.id === id ? { ...m, ...patch } : m))
+        );
     }
 
-    function removeMembership(id_: string) {
-        setMemberships((s) => s.filter((m) => m.id !== id_));
+    function removeMembership(id: string) {
+        setMemberships((s) => s.filter((m) => m.id !== id));
     }
 
+    /* ---------- Save ---------- */
     function onSave() {
-        // gather data and send to API
         const payload = {
             firstName,
             lastName,
@@ -91,150 +122,230 @@ function BasicDetails() {
             phone,
             email,
             languages,
+            specialties,
             memberships,
         };
-        dispatch<any>(saveBasicDetails(payload, imageFile)).then((res: any) => {
-            console.log("Saved basic details:", res);
-            if (res.type === "DOCTOR_BASIC_SUCCESS") {
-                toast.success("Basic details saved successfully!");
-                console.log("Doctor ID:", res.payload._id);
-            }
-        }).catch((err: any) => {
-            console.error("Error saving basic details:", err);
-        })
 
+        dispatch<any>(saveBasicDetails(payload, imageFile))
+            .then((res: any) => {
+                if (res.type === "DOCTOR_BASIC_SUCCESS") {
+                    toast.success("Basic details saved successfully!");
+                }
+            })
+            .catch(() => toast.error("Failed to save details"));
     }
+
+
+    function InputField({ label, value, set }: any) {
+        return (
+            <div>
+                <label className="text-xs font-medium mb-1 block">{label}</label>
+                <input
+                    value={value}
+                    onChange={(e) => set(e.target.value)}
+                    readOnly={label === "Phone" || label === "Email"}
+                    className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-200
+    ${label === "Phone" || label === "Email"
+                            ? "bg-gray-100 text-gray-600 cursor-not-allowed"
+                            : "bg-white"}
+  `}
+                />
+
+            </div>
+        );
+    }
+
+    useEffect(() => {
+        if (!doctorDetails) return;
+
+        setFirstName(doctorDetails.firstName ?? "");
+        setLastName(doctorDetails.lastName ?? "");
+        setDisplayName(doctorDetails.displayName ?? "");
+        setDesignation(doctorDetails.designation ?? "");
+        setLanguages(doctorDetails.languages ?? []);
+        if (doctorDetails?.memberships?.length) {
+            setMemberships(
+                doctorDetails.memberships.map((m: any) => ({
+                    id: m.id || uid(),   // ensure id exists
+                    title: m.title ?? "",
+                    about: m.about ?? "",
+                }))
+            );
+        }
+
+        if (doctorDetails?.specialties?.length) {
+            setSpecialties(
+                doctorDetails.specialties.map((s: any) => s.title)
+            );
+        }
+    }, [doctorDetails]);
+
+    useEffect(() => {
+        if (!userDetails) return;
+
+        setPhone(userDetails.phone ?? "");
+        setEmail(userDetails.email ?? "");
+    }, [userDetails]);
+
+
+    /* ---------------- JSX ---------------- */
     return (
         <div className="bg-white rounded-lg shadow p-6 space-y-6">
-            {/* Profile image */}
-            <div className="border border-gray-200 rounded-md p-4">
-                <div className="flex items-center gap-4">
-                    <div className="w-28 h-28 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden border border-dashed border-gray-200">
+
+            {/* Profile Image */}
+            <div className="border rounded-md p-4">
+                <div className="flex gap-4">
+                    <div className="w-28 h-28 border border-dashed rounded-md flex items-center justify-center bg-gray-100 overflow-hidden">
                         {imagePreview ? (
-                            <img src={imagePreview} alt="profile" className="w-full h-full object-cover" />
+                            <img src={imagePreview} className="w-full h-full object-cover" />
                         ) : (
-                            <div className="text-gray-400 flex flex-col items-center gap-2">
-                                <ImagePlus size={28} />
-                                <div className="text-xs">No image</div>
-                            </div>
+                            <ImagePlus className="text-gray-400" />
                         )}
                     </div>
 
                     <div>
-                        <div className="text-sm font-medium">Profile Image</div>
-                        <div className="flex items-center gap-4 mt-2">
-                            <label className="inline-flex items-center gap-2 text-sm text-blue-600 cursor-pointer">
-                                <input type="file" accept="image/*" onChange={onImageChange} className="hidden" />
-                                <span className="text-sm font-medium">Upload New</span>
+                        <label className="text-sm font-medium">Profile Image</label>
+                        <div className="flex gap-4 mt-2">
+                            <label className="text-blue-600 cursor-pointer text-sm">
+                                <input type="file" hidden onChange={onImageChange} />
+                                Upload New
                             </label>
-
-                            <button onClick={removeImage} className="text-sm text-red-500">Remove</button>
+                            <button onClick={removeImage} className="text-red-500 text-sm">
+                                Remove
+                            </button>
                         </div>
-
-                        <div className="text-xs text-gray-500 mt-2">Your Image should be below 4 MB, Accepted format jpg, png, svg</div>
-                        {imageError && <div className="text-sm text-red-500 mt-2">{imageError}</div>}
+                        {imageError && (
+                            <div className="text-red-500 text-xs mt-1">{imageError}</div>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Information grid */}
-            <div className="border border-gray-100 rounded-md p-4">
-                <div className="text-sm font-medium mb-4">Information</div>
+            {/* Information */}
+            <div className="border rounded-md p-4">
+                <div className="grid md:grid-cols-3 gap-4">
+                    <InputField label="First Name" value={firstName} set={setFirstName} />
+                    <InputField label="Last Name" value={lastName} set={setLastName} />
+                    <InputField label="Display Name" value={displayName} set={setDisplayName} />
+                    <InputField label="Designation" value={designation} set={setDesignation} />
+                    <InputField label="Phone" value={phone} set={setPhone} />
+                    <InputField label="Email" value={email} set={setEmail} />
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label className="block text-xs font-medium mb-1">First Name *</label>
-                        <input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200" />
-                    </div>
+                    {/* Languages */}
+                    <TagInput
+                        label="Known Languages"
+                        items={languages}
+                        input={languageInput}
+                        setInput={setLanguageInput}
+                        onAdd={addLanguage}
+                        onRemove={removeLanguage}
+                        placeholder="Add language"
+                    />
 
-                    <div>
-                        <label className="block text-xs font-medium mb-1">Last Name *</label>
-                        <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200" />
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-medium mb-1">Display Name *</label>
-                        <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200" />
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-medium mb-1">Designation *</label>
-                        <input value={designation} onChange={(e) => setDesignation(e.target.value)} className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200" />
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-medium mb-1">Phone Numbers *</label>
-                        <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200" />
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-medium mb-1">Email Address *</label>
-                        <input value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200" />
-                    </div>
-
-                    <div className="md:col-span-3">
-                        <label className="block text-xs font-medium mb-1">Known Languages *</label>
-
-                        <div className="flex items-center gap-2 flex-wrap">
-                            {languages.map((l) => (
-                                <div key={l} className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-md text-sm">
-                                    <span>{l}</span>
-                                    <button onClick={() => removeLanguage(l)} className="text-xs text-gray-500">×</button>
-                                </div>
-                            ))}
-
-                            <input
-                                value={languageInput}
-                                onChange={(e) => setLanguageInput(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addLanguage())}
-                                placeholder="Add a tag"
-                                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200 text-sm"
-                            />
-
-                            <button onClick={addLanguage} className="ml-3 text-sm text-indigo-600">Save</button>
-                        </div>
-                    </div>
+                    {/* Specialties */}
+                    <TagInput
+                        label="Doctor Specialties"
+                        items={specialties}
+                        input={specialtyInput}
+                        setInput={setSpecialtyInput}
+                        onAdd={addSpecialty}
+                        onRemove={removeSpecialty}
+                        placeholder="e.g. Cardiologist"
+                    />
                 </div>
             </div>
 
             {/* Memberships */}
-            <div className="border border-gray-100 rounded-md p-4">
-                <div className="text-sm font-medium mb-4">Memberships</div>
-
-                <div className="space-y-4">
-                    {memberships.map((m) => (
-                        <div key={m.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                            <div>
-                                <label className="block text-xs font-medium mb-1">Title *</label>
-                                <input value={m.title} onChange={(e) => updateMembership(m.id, { title: e.target.value })} className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200 text-sm" placeholder="Add Title" />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium mb-1">About Membership</label>
-                                <input value={m.about} onChange={(e) => updateMembership(m.id, { about: e.target.value })} className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200 text-sm" placeholder="About membership" />
-                            </div>
-
-                            <div className="flex gap-2 justify-end md:justify-start">
-                                <button onClick={() => removeMembership(m.id)} className="text-sm text-red-500">Delete</button>
-                            </div>
-                        </div>
-                    ))}
-
-                    <div className="text-right">
-                        <button onClick={addMembership} className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-400 text-white text-sm">
-                            <Plus size={14} /> Add New
+            <div className="border rounded-md p-4 space-y-4">
+                {memberships.map((m) => (
+                    <div key={m.id} className="grid md:grid-cols-3 gap-4">
+                        <input
+                            placeholder="Title"
+                            value={m.title}
+                            onChange={(e) =>
+                                updateMembership(m.id, { title: e.target.value })
+                            }
+                            className="border px-3 py-2 rounded-md"
+                        />
+                        <input
+                            placeholder="About"
+                            value={m.about}
+                            onChange={(e) =>
+                                updateMembership(m.id, { about: e.target.value })
+                            }
+                            className="border px-3 py-2 rounded-md"
+                        />
+                        <button
+                            onClick={() => removeMembership(m.id)}
+                            className="text-red-500 text-sm"
+                        >
+                            Delete
                         </button>
                     </div>
-                </div>
+                ))}
+
+                <button
+                    onClick={addMembership}
+                    className="inline-flex items-center gap-2 bg-indigo-500 text-white px-4 py-2 rounded-full text-sm"
+                >
+                    <Plus size={14} /> Add Membership
+                </button>
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-end gap-4">
-                <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-full border text-sm">Cancel</button>
-                <button onClick={onSave} className="px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-400 text-white text-sm">Save Changes</button>
+            <div className="flex justify-end gap-4">
+                <button className="border px-4 py-2 rounded-full">Cancel</button>
+                <button
+                    onClick={onSave}
+                    className="bg-indigo-500 text-white px-4 py-2 rounded-full"
+                >
+                    Save Changes
+                </button>
             </div>
         </div>
-    )
+    );
 }
 
-export default BasicDetails
+/* ---------------- Reusable Components ---------------- */
+
+
+function TagInput({
+    label,
+    items,
+    input,
+    setInput,
+    onAdd,
+    onRemove,
+    placeholder,
+}: any) {
+    return (
+        <div className="md:col-span-3">
+            <label className="text-xs font-medium">{label}</label>
+            <div className="flex gap-2 flex-wrap mt-1">
+                {items.map((i: string) => (
+                    <span
+                        key={i}
+                        className="bg-gray-100 px-3 py-1 rounded-md text-sm flex items-center gap-2"
+                    >
+                        {i}
+                        <button onClick={() => onRemove(i)}>×</button>
+                    </span>
+                ))}
+                <input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) =>
+                        e.key === "Enter" && (e.preventDefault(), onAdd())
+                    }
+                    placeholder={placeholder}
+                    className="border px-3 py-2 rounded-md text-sm"
+                />
+                <button onClick={onAdd} className="text-indigo-600 text-sm">
+                    Add
+                </button>
+            </div>
+        </div>
+    );
+}
+
+export default BasicDetails;

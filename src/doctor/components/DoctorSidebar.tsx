@@ -17,6 +17,10 @@ import {
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { socket } from "../../socket";
+import { useDispatch } from "react-redux";
+import { getDoctorById } from "../../redux/actions/doctorProfileAction";
+import { useData } from "../../shared/DataProvider";
 
 type NavItem = {
   id: string;
@@ -26,30 +30,34 @@ type NavItem = {
   badge?: number;
 };
 
-const NAV: NavItem[] = [
-  { id: "dashboard", link: "/doctor/doctor-dashboard", label: "Dashboard", icon: <Home size={18} /> },
-  { id: "requests", link: "/doctor/doctor-requests", label: "Requests", icon: <Bell size={18} />, badge: 2 },
-  { id: "appointments", link: "/doctor/doctor-appointments", label: "Appointments", icon: <Calendar size={18} /> },
-  { id: "timings", link: "/doctor/doctor-timings", label: "Available Timings", icon: <Clock size={18} /> },
-  { id: "patients", link: "/doctor/doctor-patients", label: "My Patients", icon: <Users size={18} /> },
-  { id: "services", link: "/doctor/doctor-services", label: "Specialties & Services", icon: <User size={18} /> },
-  { id: "reviews", link: "/doctor/doctor-reviews", label: "Reviews", icon: <Star size={18} /> },
-  { id: "accounts", link: "/doctor/doctor-accounts", label: "Accounts", icon: <FileText size={18} /> },
-  { id: "invoices", link: "/doctor/doctor-invoices", label: "Invoices", icon: <CreditCard size={18} /> },
-  { id: "payout", link: "/doctor/doctor-payout", label: "Payout Settings", icon: <Settings size={18} /> },
-  { id: "message", link: "/doctor/doctor-message", label: "Message", icon: <MessageCircle size={18} />, badge: 1 },
-  { id: "profile", link: "/doctor/doctor-profile", label: "Profile Settings", icon: <Settings size={18} /> },
-  { id: "social", link: "/doctor/doctor-social", label: "Social Media", icon: <Users size={18} /> },
-  { id: "password", link: "/doctor/doctor-password", label: "Change Password", icon: <Settings size={18} /> },
-  { id: "logout", link: "/doctor/doctor-logout", label: "Logout", icon: <LogOut size={18} /> },
-];
+
 
 export default function DoctorSidebar() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [active, setActive] = useState("dashboard");
-  // isOpen controls expanded/collapsed on large screens and visibility on small screens
+  const authString = localStorage.getItem("auth");
+  const parsedAuth = authString ? JSON.parse(authString) : null;
+
+  const { docId, setDocId } = useData() as any;
+
   const [isOpen, setIsOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [doctorDetails, setDoctorDetails] = useState(null as any);
+
+  useEffect(() => {
+    dispatch(getDoctorById(parsedAuth.user.id) as any).then((action: any) => {
+      if (action.type === "DOCTOR_DETAILS_SUCCESS") {
+        setDoctorDetails(action.payload)
+        setDocId(action.payload)
+          localStorage.setItem("docId", JSON.stringify(action.payload))
+      }
+    });
+
+  }, [dispatch]);
+
+
 
   useEffect(() => {
     function handleResize() {
@@ -69,6 +77,46 @@ export default function DoctorSidebar() {
     if (isMobile) document.body.style.overflow = isOpen ? "hidden" : "auto";
     return () => { document.body.style.overflow = "auto" };
   }, [isOpen, isMobile]);
+
+
+
+
+  useEffect(() => {
+    socket.connect();
+    console.log("doctorDetails=========>>" + doctorDetails);
+    socket.on("connect", () => {
+      console.log("🟢 Doctor socket connected:", socket.id);
+      socket.emit("join", doctorDetails?._id); // JOIN DOCTOR ROOM
+    });
+
+    socket.on("notification", (data) => {
+      console.log("🔔 Doctor notification:", data);
+      setNotifications((prev) => [data, ...prev]);
+    });
+
+    return () => {
+      socket.off("notification");
+      socket.disconnect();
+    };
+  }, [doctorDetails?._id]);
+
+  const NAV: NavItem[] = [
+    { id: "dashboard", link: "/doctor/doctor-dashboard", label: "Dashboard", icon: <Home size={18} /> },
+    { id: "requests", link: "/doctor/doctor-requests", label: "Requests", icon: <Bell size={18} />, badge: notifications?.length > 0 ? notifications?.length : 0 },
+    { id: "appointments", link: "/doctor/doctor-appointments", label: "Appointments", icon: <Calendar size={18} /> },
+    { id: "timings", link: "/doctor/doctor-timings", label: "Available Timings", icon: <Clock size={18} /> },
+    { id: "patients", link: "/doctor/doctor-patients", label: "My Patients", icon: <Users size={18} /> },
+    { id: "services", link: "/doctor/doctor-services", label: "Specialties & Services", icon: <User size={18} /> },
+    { id: "reviews", link: "/doctor/doctor-reviews", label: "Reviews", icon: <Star size={18} /> },
+    { id: "accounts", link: "/doctor/doctor-accounts", label: "Accounts", icon: <FileText size={18} /> },
+    { id: "invoices", link: "/doctor/doctor-invoices", label: "Invoices", icon: <CreditCard size={18} /> },
+    { id: "payout", link: "/doctor/doctor-payout", label: "Payout Settings", icon: <Settings size={18} /> },
+    { id: "message", link: "/doctor/doctor-message", label: "Message", icon: <MessageCircle size={18} />, badge: 1 },
+    { id: "profile", link: "/doctor/doctor-profile", label: "Profile Settings", icon: <Settings size={18} /> },
+    { id: "social", link: "/doctor/doctor-social", label: "Social Media", icon: <Users size={18} /> },
+    { id: "password", link: "/doctor/doctor-password", label: "Change Password", icon: <Settings size={18} /> },
+    { id: "logout", link: "/doctor/doctor-logout", label: "Logout", icon: <LogOut size={18} /> },
+  ];
 
   return (
     <>

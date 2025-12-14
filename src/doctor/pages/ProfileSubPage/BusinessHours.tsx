@@ -16,7 +16,7 @@ type DayHours = {
 
 const DAYS: DayKey[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-export default function BusinessHours() {
+export default function BusinessHours({ doctorDetails }: any) {
   const dispatch = useDispatch();
   const [days, setDays] = useState<DayHours[]>(() =>
     DAYS.map((d, i) => ({ day: d, enabled: i < 5, open: "", close: "", collapsed: true }))

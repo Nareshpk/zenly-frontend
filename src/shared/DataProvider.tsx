@@ -10,6 +10,7 @@ type DataContextType = {
   setDoctor: (v: boolean) => void;
   loading: boolean;
   setLoading: (v: boolean) => void;
+  docId: any; setDocId: (v: any) => void;
   healthSpecialties: Specialty[];
 }
 const DataContext = createContext<DataContextType | null>(null)
@@ -20,6 +21,7 @@ interface props {
 const DataProvider = ({ children }: props) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [user, setUser] = useState<User>(null);
+  const [docId, setDocId] = useState<any>(null);
   const [doctor, setDoctor] = useState<boolean>(true);
   const [healthSpecialties, setHealthSpecialties] = useState<Specialty[]>([]);
   useEffect(() => {
@@ -35,6 +37,7 @@ const DataProvider = ({ children }: props) => {
           setDoctor,
           loading,
           setLoading,
+          docId, setDocId,
           healthSpecialties,
 
         }}

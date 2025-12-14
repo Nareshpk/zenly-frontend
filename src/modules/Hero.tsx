@@ -152,7 +152,7 @@ export default function Hero() {
 
               <div className="mt-3 sm:mt-4 flex items-start gap-3 sm:gap-4">
                 <img
-                  src={assets.featured_doctor || "https://images.rawpixel.com/image_800/...jpg"}
+                  src={"https://t3.ftcdn.net/jpg/00/77/16/14/360_F_77161499_tKvY6PBucWUl0TgZlpXZL3ZiGIu3BoNu.jpg"}
                   alt="Doctor"
                   className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover shadow-sm border border-white/6"
                   loading="lazy"

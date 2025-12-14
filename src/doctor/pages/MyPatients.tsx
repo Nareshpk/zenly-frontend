@@ -1,5 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Search, Calendar, Filter, MapPin, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { useData } from "../../shared/DataProvider";
+import { getAppointmentsByDoctor } from "../../redux/actions/appointmentActions";
 
 type Patient = {
   id: string;
@@ -27,20 +31,47 @@ const SAMPLE: Patient[] = [
 ];
 
 export default function MyPatients() {
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { docId, setDocId } = useData() as any;
+  const authString = localStorage.getItem("auth");
+  const parsedAuth = authString ? JSON.parse(authString) : null;
+  const userId = parsedAuth?.user?.id
+  const docdetails = localStorage.getItem("docId");
+  const getdocdetails = docdetails ? JSON.parse(docdetails) : null;
+
+  const [items, setItems] = useState<Request[]>([]);
+
   const [tab, setTab] = useState<"Active" | "InActive">("Active");
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(6);
 
-  const filtered = SAMPLE.filter((p) => {
+  const filtered = items.filter((p: any) => {
     if (!query) return true;
     return (
-      p.name.toLowerCase().includes(query.toLowerCase()) ||
-      p.appointmentId.toLowerCase().includes(query.toLowerCase()) ||
-      p.location?.toLowerCase().includes(query.toLowerCase())
+      p.patientName.toLowerCase().includes(query.toLowerCase()) ||
+      p.appointmentNo.toLowerCase().includes(query.toLowerCase()) ||
+      p.address?.toLowerCase().includes(query.toLowerCase())
     );
   });
 
   const shown = filtered.slice(0, visible);
+
+  const getRequests = async () => {
+    dispatch(getAppointmentsByDoctor(docId?._id ?? getdocdetails?._id) as any)
+      .then((res: any) => {
+        if (res.type === "APPOINTMENT_LIST_SUCCESS") {
+          setItems(res.payload);
+        }
+      })
+      .catch((err: any) => console.error(err));
+  };
+
+  useEffect(() => {
+    getRequests();
+  }, []);
+
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -64,39 +95,39 @@ export default function MyPatients() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {shown.map((p) => (
-          <div key={p.id} className="bg-white rounded-lg shadow p-5">
+        {shown.map((p: any) => (
+          <div key={p._id} className="bg-white rounded-lg shadow p-5">
             <div className="flex items-start gap-4">
-              <img src={p.avatar} alt={p.name} className="w-16 h-16 rounded-lg object-cover" />
+              <img src={`http://localhost:5000${p.avatar}`} alt={p.patientName} className="w-16 h-16 rounded-lg object-cover" />
 
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-xs text-sky-600 font-medium">#{p.appointmentId}</div>
-                    <div className="text-lg font-semibold text-slate-800">{p.name}</div>
-                    <div className="text-sm text-slate-500 mt-1">Age : {p.age} | {p.gender} | {p.blood}</div>
+                    <div className="text-xs text-sky-600 font-medium">#{p.appointmentNo}</div>
+                    <div className="text-lg font-semibold text-slate-800">{p.patientName}</div>
+                    <div className="text-sm text-slate-500 mt-1">Age : {p.age} | {p.sex} | {p.bloodGroup}</div>
                   </div>
                 </div>
 
                 <div className="mt-4 bg-sky-50 rounded-md p-3 text-sm text-slate-700">
-                  <div className="flex items-center gap-3 mb-2"><Clock size={16} /> {p.nextAppointment}</div>
-                  <div className="flex items-center gap-3"><MapPin size={16} /> {p.location}</div>
+                  {p?.nextAppointment && (<div className="flex items-center gap-3 mb-2"><Clock size={16} /> {p?.nextAppointment}</div>)}
+                  <div className="flex items-center gap-3"><MapPin size={16} /> {p.address}</div>
                 </div>
 
-                <div className="mt-4 border-t pt-3 text-sm text-slate-500"> <span className="inline-block"><Calendar size={14} /></span> Last Booking {p.lastBooking}</div>
+                <div className="mt-4 border-t pt-3 text-sm text-slate-500"> <span className="inline-block"><Calendar size={14} /></span> Last Booking {p.date}</div>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="mt-8 text-center">
+      {/* <div className="mt-8 text-center">
         {visible < filtered.length ? (
           <button onClick={() => setVisible((v) => v + 6)} className="text-sm text-slate-700">Load More</button>
         ) : (
           <div className="text-sm text-slate-500">No more results</div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }

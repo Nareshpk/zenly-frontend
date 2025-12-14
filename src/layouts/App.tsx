@@ -8,7 +8,7 @@ import store from '../redux/store';
 
 import { Toaster } from "react-hot-toast";
 import ErrorPage from '../pages/errors/ErrorPage';
-import routes from '../routes';
+import routes from '../routes/routes';
 import DataProvider from '../shared/DataProvider';
 interface AppProps {
   history: History | BrowserHistory

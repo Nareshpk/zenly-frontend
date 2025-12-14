@@ -1,51 +1,78 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom';
+import { motion } from "framer-motion";
+import {
+  Bot,
+  Calendar,
+  LayoutDashboard,
+  LogOut,
+  MessageSquare,
+  Settings,
+  User
+} from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
 
-function NavLink({ to, label, collapsed }: { to: string; label: string; collapsed: boolean }) {
-    return (
-        <Link
-            to={to}
-            className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700"
-            aria-current={to === "/" ? "page" : undefined}
+export default function AppSidebar({
+  isOpen,
+  setIsOpen,
+}: {
+  isOpen: boolean;
+  setIsOpen: (v: boolean) => void;
+}) {
+  const navigate = useNavigate();
+
+  const menus = [
+    { name: "Dashboard", path: "/app/dashboard", icon: <LayoutDashboard size={18} /> },
+    { name: "Doctors", path: "/app/doctors", icon: <User size={18} /> },
+    { name: "Appointments", path: "/app/my-appointments", icon: <Calendar size={18} /> },
+    { name: "Chat", path: "/app/user-message", icon: <MessageSquare size={18} /> },
+    { name: "AI Assistant", path: "/app/ai-chat", icon: <Bot  size={18} /> },
+    { name: "Settings", path: "/app/profile", icon: <Settings size={18} /> },
+  ];
+
+  function logout() {
+    localStorage.clear();
+    navigate("/");
+  }
+
+  return (
+    <motion.aside
+      animate={{ width: isOpen ? 260 : 80 }}
+      transition={{ duration: 0.25 }}
+      className="fixed left-0 top-0 h-screen bg-white border-r shadow-sm z-40 flex flex-col"
+    >
+      {/* Logo */}
+      <div className="h-16 flex items-center justify-center border-b font-bold text-indigo-600">
+        {isOpen ? "MEDCARE" : "MC"}
+      </div>
+
+      {/* Menu */}
+      <nav className="flex-1 p-2 space-y-1">
+        {menus.map((m) => (
+          <NavLink
+            key={m.path}
+            to={m.path}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-3 rounded-lg transition-all
+              ${isActive
+                ? "bg-indigo-50 text-indigo-600 font-semibold"
+                : "text-slate-700 hover:bg-slate-50"}`
+            }
+          >
+            {m.icon}
+            {isOpen && <span>{m.name}</span>}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Logout */}
+      <div className="p-3 border-t">
+        <button
+          onClick={logout}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50"
         >
-            <span className="h-5 w-5 bg-gray-200 rounded" />
-            <span className={`${collapsed ? "hidden" : "block"}`}>{label}</span>
-        </Link>
-    );
+          <LogOut size={18} />
+          {isOpen && <span>Logout</span>}
+        </button>
+      </div>
+    </motion.aside>
+  );
 }
-
-function Sidebar() {
-    const [collapsed, setCollapsed] = useState(false);
-    return (
-        <div className="min-h-screen bg-gray-50 flex">
-            <aside className={`bg-white border-r transition-all duration-200 ${collapsed ? "w-16" : "w-64"} hidden sm:block`}>
-                <div className="h-full flex flex-col">
-                    <div className="px-4 py-5 flex items-center gap-3 border-b">
-                        <div className={`text-xl font-bold ${collapsed ? "hidden" : "block"}`}>MyApp</div>
-                        <button
-                            onClick={() => setCollapsed((c) => !c)}
-                            className="ml-auto p-1 rounded hover:bg-gray-100"
-                            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                        >
-                            {collapsed ? "»" : "«"}
-                        </button>
-                    </div>
-
-                    <nav className="flex-1 px-2 py-4 space-y-1">
-                        <NavLink to="/app/dashboard" label="Dashboard" collapsed={collapsed} />
-                        <NavLink to="/app/user" label="Users" collapsed={collapsed} />
-                        <NavLink to="/app/reports" label="Reports" collapsed={collapsed} />
-                        <NavLink to="/app/settings" label="Settings" collapsed={collapsed} />
-                    </nav>
-
-                    <div className="p-4 border-t">
-                        <button className="w-full text-left text-sm text-gray-600 hover:text-gray-900">Logout</button>
-                    </div>
-                </div>
-            </aside>
-
-        </div>
-    )
-}
-
-export default Sidebar
