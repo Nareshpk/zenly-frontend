@@ -25,31 +25,33 @@ export default function PatientNavbarNotifications({
     const unreadCount = notifications.filter((n) => !n.isRead).length;
 
     useEffect(() => {
+        if (!patientId) return;
+
         socket.connect();
 
         socket.on("connect", () => {
-            console.log("🟢 Socket connected:", socket.id);
+            console.log("🟢 Patient socket connected:", socket.id);
 
-            // 🔥 JOIN ROOM IMMEDIATELY
-            socket.emit("join", patientId);
+            // ✅ JOIN USER ROOM
+            socket.emit("join-user", patientId);
         });
 
-        socket.on("notification", (data) => {
-            console.log("🔔 REAL-TIME notification:", data);
-
-            // 🔥 UPDATE STATE (this is what removes refresh need)
+        // ✅ LISTEN TO CORRECT EVENT
+        socket.on("new-notification", (data) => {
+            console.log("🔔 Patient notification:", data);
             setNotifications((prev) => [data, ...prev]);
         });
 
         return () => {
-            socket.off("notification");
+            socket.off("new-notification");
             socket.disconnect();
         };
     }, [patientId]);
 
+
     const markRead = async (id: string) => {
         try {
-            await axiosInstance.put(`/api/notifications/${id}/read`);
+            await axiosInstance.put(`/api/notifications/mark/${id}/read`);
             setNotifications((prev) =>
                 prev.map((n) =>
                     n._id === id ? { ...n, isRead: true } : n
@@ -62,7 +64,7 @@ export default function PatientNavbarNotifications({
 
     const deleteNoti = async (id: string) => {
         try {
-            await axiosInstance.delete(`/api/notifications/${id}`);
+            await axiosInstance.delete(`/api/notifications/delete/${id}`);
             setNotifications((prev) =>
                 prev.filter((n) => n._id !== id)
             );
@@ -79,7 +81,7 @@ export default function PatientNavbarNotifications({
 
 
                 const res = await axiosInstance.get(
-                    `/api/notifications/${patientId}`
+                    `/api/notifications/patient/${patientId}`
                 );
 
                 setNotifications(res.data);
@@ -92,6 +94,9 @@ export default function PatientNavbarNotifications({
 
         getNotifications();
     }, [patientId]);
+
+    console.log("notifications=====================>>>" + notifications);
+
 
     return (
         <div className="relative">

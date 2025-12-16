@@ -51,7 +51,7 @@ export default function DoctorSidebar() {
       if (action.type === "DOCTOR_DETAILS_SUCCESS") {
         setDoctorDetails(action.payload)
         setDocId(action.payload)
-          localStorage.setItem("docId", JSON.stringify(action.payload))
+        localStorage.setItem("docId", JSON.stringify(action.payload))
       }
     });
 
@@ -82,23 +82,30 @@ export default function DoctorSidebar() {
 
 
   useEffect(() => {
+    if (!doctorDetails?._id) return;
+
     socket.connect();
-    console.log("doctorDetails=========>>" + doctorDetails);
+
     socket.on("connect", () => {
       console.log("🟢 Doctor socket connected:", socket.id);
-      socket.emit("join", doctorDetails?._id); // JOIN DOCTOR ROOM
+
+      // ✅ JOIN USER ROOM (for notifications)
+      socket.emit("join-user", doctorDetails._id);
     });
 
-    socket.on("notification", (data) => {
+    // ✅ LISTEN TO CORRECT EVENT
+    socket.on("new-notification", (data) => {
       console.log("🔔 Doctor notification:", data);
       setNotifications((prev) => [data, ...prev]);
     });
 
     return () => {
-      socket.off("notification");
+      socket.off("new-notification");
       socket.disconnect();
     };
   }, [doctorDetails?._id]);
+
+
 
   const NAV: NavItem[] = [
     { id: "dashboard", link: "/doctor/doctor-dashboard", label: "Dashboard", icon: <Home size={18} /> },
