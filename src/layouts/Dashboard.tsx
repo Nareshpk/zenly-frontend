@@ -7,6 +7,7 @@ import DoctorSidebar from "../doctor/components/DoctorSidebar";
 import Footer from "../pages/components/Footer";
 import Navbar from "../pages/components/Navbar";
 import AppSidebar from "../pages/components/Sidebar";
+import AdminNavbar from "../admin/components/AdminNavbar";
 
 type AuthShape = {
   isAuthenticated?: boolean;
@@ -49,21 +50,22 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
       <Toaster />
 
       {isAdmin ? (
-        <div className="flex h-screen overflow-hidden">
-
+        <div className="flex h-screen overflow-hidden bg-gray-50">
           {/* Sidebar */}
-          <AdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+          <AdminSidebar open={sidebarOpen} />
 
-          {/* MAIN CONTENT */}
-          <main
-            className="flex-1 p-6 bg-gray-50 overflow-y-auto transition-all duration-300"
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col transition-all duration-300">
+            <AdminNavbar
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+            />
 
-          >
-            {children}
-          </main>
-
+            <main className="flex-1 p-6 overflow-y-auto">
+              {children}
+            </main>
+          </div>
         </div>
-
 
       ) : isDoctor ? (
         <div className="flex h-screen overflow-hidden">

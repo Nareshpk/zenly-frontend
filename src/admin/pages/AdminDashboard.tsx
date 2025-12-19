@@ -1,83 +1,118 @@
-import React from "react";
-import { Users, CalendarCheck, ClipboardList, DollarSign } from "lucide-react";
+import {
+  Calendar,
+  DollarSign,
+  Download,
+  Users,
+  Users2,
+} from "lucide-react";
+import { useState } from "react";
+import AdminAnalyticsTab from "../tabs/AdminAnalyticsTab";
+import AdminNotificationsTab from "../tabs/AdminNotificationsTab";
+import AdminOverviewTab from "../tabs/AdminOverviewTab";
+import AdminReportsTab from "../tabs/AdminReportsTab";
+
+
+
+const tabs = ["Overview", "Analytics", "Reports", "Notifications"] as const;
+type TabType = typeof tabs[number];
 
 export default function AdminDashboard() {
-  // Dummy stats — replace with API data
-  const stats = [
-    {
-      title: "Total Doctors",
-      value: 24,
-      icon: <Users className="w-6 h-6 text-blue-600" />,
-      bg: "bg-blue-100",
-    },
-    {
-      title: "Total Appointments",
-      value: 180,
-      icon: <CalendarCheck className="w-6 h-6 text-green-600" />,
-      bg: "bg-green-100",
-    },
-    {
-      title: "Pending Approvals",
-      value: 12,
-      icon: <ClipboardList className="w-6 h-6 text-yellow-600" />,
-      bg: "bg-yellow-100",
-    },
-    {
-      title: "Total Revenue",
-      value: "₹1,25,000",
-      icon: <DollarSign className="w-6 h-6 text-purple-600" />,
-      bg: "bg-purple-100",
-    },
-  ];
-
+  const [activeTab, setActiveTab] = useState<TabType>("Overview");
   return (
-    <div className="w-full p-6">
-      {/* Page Title */}
-      <h1 className="text-3xl font-semibold text-gray-800 mb-6">
-        Admin Dashboard
-      </h1>
+    <div className="space-y-6">
+      {/* ---------- HEADER ---------- */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Dashboard</h1>
+          <p className="text-sm text-gray-500">
+            Welcome back, Dr. Johnson! Here's what's happening today.
+          </p>
+        </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        {stats.map((item, index) => (
-          <div
-            key={index}
-            className="p-5 bg-white shadow-md rounded-xl flex items-center space-x-4 hover:shadow-lg transition-all"
+        <div className="flex gap-3">
+          <button className="px-4 py-2 border rounded-lg text-sm">
+            Dec 16, 2025 - Dec 16, 2025
+          </button>
+          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 text-sm">
+            <Download size={16} /> Export
+          </button>
+        </div>
+      </div>
+
+      {/* ---------- STATS CARDS ---------- */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <StatCard
+          title="Total Revenue"
+          value="$45,231.89"
+          change="+20.1% from last month"
+          icon={<DollarSign className="text-green-600" />}
+        />
+        <StatCard
+          title="Appointments"
+          value="+2,350"
+          change="+10.1% from last month"
+          icon={<Calendar className="text-blue-600" />}
+        />
+        <StatCard
+          title="Patients"
+          value="+12,234"
+          change="+19% from last month"
+          icon={<Users className="text-orange-500" />}
+        />
+        <StatCard
+          title="Staff"
+          value="+573"
+          change="+4 new this month"
+          icon={<Users2 className="text-purple-600" />}
+        />
+      </div>
+
+      {/* ---------- TABS ---------- */}
+      <div className="flex gap-2 mb-6">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-1.5 rounded-md text-sm transition ${activeTab === tab
+              ? "bg-gray-100 font-medium text-black"
+              : "text-gray-500 hover:bg-gray-50"
+              }`}
           >
-            <div className={`p-3 rounded-lg ${item.bg}`}>{item.icon}</div>
-            <div>
-              <p className="text-sm text-gray-500">{item.title}</p>
-              <p className="text-xl font-semibold text-gray-800">
-                {item.value}
-              </p>
-            </div>
-          </div>
+            {tab}
+          </button>
         ))}
       </div>
 
-      {/* Recent Activity Section */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">
-          Recent Activity
-        </h2>
-
-        <ul className="space-y-3">
-          <li className="p-4 bg-gray-50 rounded-lg flex justify-between">
-            <span>New doctor registered: <b>Dr. Priya</b></span>
-            <span className="text-sm text-gray-500">2 hours ago</span>
-          </li>
-
-          <li className="p-4 bg-gray-50 rounded-lg flex justify-between">
-            <span>Appointment completed: <b>#A1023</b></span>
-            <span className="text-sm text-gray-500">4 hours ago</span>
-          </li>
-
-          <li className="p-4 bg-gray-50 rounded-lg flex justify-between">
-            <span>New appointment booked: <b>#A1028</b></span>
-            <span className="text-sm text-gray-500">6 hours ago</span>
-          </li>
-        </ul>
-      </div>
+      {/* ---------- CONTENT ---------- */}
+      {activeTab === "Overview" && <AdminOverviewTab />}
+      {activeTab === "Analytics" && <AdminAnalyticsTab />}
+      {activeTab === "Reports" && <AdminReportsTab />}
+      {activeTab === "Notifications" && <AdminNotificationsTab />}
     </div>
   );
 }
+
+/* ---------- COMPONENTS ---------- */
+
+function StatCard({
+  title,
+  value,
+  change,
+  icon,
+}: {
+  title: string;
+  value: string;
+  change: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="bg-white border rounded-xl p-6">
+      <div className="flex items-center gap-3 mb-2">{icon}</div>
+      <h4 className="font-medium">{title}</h4>
+      <p className="text-xs text-green-600">{change}</p>
+      <div className="text-2xl font-bold mt-3">{value}</div>
+    </div>
+  );
+}
+
+
