@@ -121,6 +121,7 @@ import GeneralSettings from "../admin/pages/Settings/GeneralSettings"
 import WorkingHoursPage from "../admin/pages/Settings/WorkingHoursPage"
 import DoctorProfile from "../admin/pages/DoctorPage/DoctorList/DoctorProfile"
 import DoctorAPSchedule from "../admin/pages/DoctorPage/DoctorList/DoctorAPSchedule"
+import EditSpecializationPage from "../admin/pages/DoctorPage/DoctorList/EditSpecializationPage"
 
 
 const routes = createBrowserRouter([
@@ -215,6 +216,7 @@ const routes = createBrowserRouter([
       { path: "doctors/edit/:id", element: <AddDoctorPersonalInfo /> },
       { path: "doctors/schedule", element: <DoctorSchedule /> },
       { path: "doctors/specializations", element: <SpecializationsPage /> },
+      { path: "doctors/specializations-edit/:id", element: <EditSpecializationPage /> },
       { path: "patients-list", element: <PatientsList /> },
       { path: "patients/add", element: <AddPatient /> },
       { path: "appointments", element: <AllAppointments /> },

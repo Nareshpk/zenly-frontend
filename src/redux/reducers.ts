@@ -4,6 +4,7 @@ import authReducer from "./reducers/authReducer.ts";
 import { doctorProfileReducer } from "./reducers/doctorProfileReducer";
 import { appointmentListReducer } from "./reducers/appointmentConstants";
 import { doctorCreateReducer, doctorDetailsReducer, doctorListReducer, doctorStatusReducer, doctorUpdateReducer } from "./reducers/doctorReducer/doctor.reducer";
+import { specializationCreateReducer, specializationListReducer, specializationUpdateReducer, specializationDeleteReducer, specializationToggleReducer, specializationDetailsReducer } from "./reducers/specializationReducer/specialization.reducer";
 
 const createRootReducer = (history: History) =>
   combineReducers({
@@ -17,6 +18,12 @@ const createRootReducer = (history: History) =>
     doctorDetails: doctorDetailsReducer,
     doctorUpdate: doctorUpdateReducer,
     doctorStatus: doctorStatusReducer,
+    specializationCreate: specializationCreateReducer,
+    specializationList: specializationListReducer,
+    specializationUpdate: specializationUpdateReducer,
+    specializationDelete: specializationDeleteReducer,
+    specializationToggle: specializationToggleReducer,
+    specializationDetails: specializationDetailsReducer,
   });
 
 export default createRootReducer;
