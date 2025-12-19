@@ -119,6 +119,8 @@ import EditRoomPage from "../admin/pages/RoomAllotment/EditRoomPage"
 import AddNewRoomPage from "../admin/pages/RoomAllotment/AddNewRoomPage"
 import GeneralSettings from "../admin/pages/Settings/GeneralSettings"
 import WorkingHoursPage from "../admin/pages/Settings/WorkingHoursPage"
+import DoctorProfile from "../admin/pages/DoctorPage/DoctorList/DoctorProfile"
+import DoctorAPSchedule from "../admin/pages/DoctorPage/DoctorList/DoctorAPSchedule"
 
 
 const routes = createBrowserRouter([
@@ -206,8 +208,11 @@ const routes = createBrowserRouter([
       { path: "admin-dashboard", element: <AdminDashboard /> },
       { path: "doctor-dashboard", element: <DoctorDashboards /> },
       { path: "patient-dashboard", element: <PatientDashboard /> },
+      { path: "doctors/appointment-schedule", element: <DoctorAPSchedule /> },
       { path: "doctors-lit", element: <DoctorsListPage /> },
+      { path: "doctor-profile", element: <DoctorProfile /> },
       { path: "doctors/add", element: <AddDoctorPersonalInfo /> },
+      { path: "doctors/edit/:id", element: <AddDoctorPersonalInfo /> },
       { path: "doctors/schedule", element: <DoctorSchedule /> },
       { path: "doctors/specializations", element: <SpecializationsPage /> },
       { path: "patients-list", element: <PatientsList /> },

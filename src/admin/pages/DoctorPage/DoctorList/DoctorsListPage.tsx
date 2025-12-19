@@ -1,103 +1,46 @@
 /* eslint-disable jsx-a11y/alt-text */
-import { useState } from "react";
 import {
-  Plus,
-  Search,
+  Edit3,
+  Eye,
   Filter,
   MoreHorizontal,
+  Plus,
+  Power,
+  Search,
+  User,
+  UserCheck,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import ListLoader from "../../../../CommenPage/ListLoader";
+import { getAllDoctors } from "../../../../redux/actions/doctorAction/doctor.actions";
 
-/* ---------------- TYPES ---------------- */
 
-type DoctorStatus = "Active" | "On Leave" | "Inactive";
-
-interface Doctor {
-  id: number;
-  name: string;
-  specialty: string;
-  status: DoctorStatus;
-  patients: number;
-  experience: string;
-  email: string;
-  phone: string;
-  avatar: string;
-}
-
-/* ---------------- DATA ---------------- */
-
-const doctors: Doctor[] = [
-  {
-    id: 1,
-    name: "Dr. Sarah Johnson",
-    specialty: "Cardiology",
-    status: "Active",
-    patients: 120,
-    experience: "8 years",
-    email: "sarah.johnson@medixpro.com",
-    phone: "+1 (555) 123-4567",
-    avatar: "https://i.pravatar.cc/150?img=1",
-  },
-  {
-    id: 2,
-    name: "Dr. Michael Chen",
-    specialty: "Neurology",
-    status: "Active",
-    patients: 85,
-    experience: "12 years",
-    email: "michael.chen@medixpro.com",
-    phone: "+1 (555) 234-5678",
-    avatar: "https://i.pravatar.cc/150?img=2",
-  },
-  {
-    id: 3,
-    name: "Dr. Lisa Patel",
-    specialty: "Pediatrics",
-    status: "On Leave",
-    patients: 150,
-    experience: "10 years",
-    email: "lisa.patel@medixpro.com",
-    phone: "+1 (555) 345-6789",
-    avatar: "https://i.pravatar.cc/150?img=3",
-  },
-  {
-    id: 4,
-    name: "Dr. James Wilson",
-    specialty: "Orthopedics",
-    status: "Active",
-    patients: 95,
-    experience: "15 years",
-    email: "james.wilson@medixpro.com",
-    phone: "+1 (555) 456-7890",
-    avatar: "https://i.pravatar.cc/150?img=4",
-  },
-  {
-    id: 5,
-    name: "Dr. Emily Rodriguez",
-    specialty: "Dermatology",
-    status: "Active",
-    patients: 110,
-    experience: "7 years",
-    email: "emily.rodriguez@medixpro.com",
-    phone: "+1 (555) 567-8901",
-    avatar: "https://i.pravatar.cc/150?img=5",
-  },
-  {
-    id: 6,
-    name: "Dr. Robert Kim",
-    specialty: "Psychiatry",
-    status: "Inactive",
-    patients: 75,
-    experience: "9 years",
-    email: "robert.kim@medixpro.com",
-    phone: "+1 (555) 678-9012",
-    avatar: "https://i.pravatar.cc/150?img=6",
-  },
-];
-
-/* ---------------- COMPONENT ---------------- */
+/* ================= PAGE ================= */
 
 export default function DoctorsListPage() {
-  const [openMenu, setOpenMenu] = useState<number | null>(null);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  /* ================= REDUX ================= */
+  const { loading, doctors = [], error } = useSelector(
+    (state: any) => state.doctorList
+  );
+
+  /* ================= LOCAL STATE ================= */
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
+
+  /* ================= FETCH ================= */
+  useEffect(() => {
+    dispatch(getAllDoctors(page, limit, search, status) as any);
+  }, [dispatch, page, search, status]);
+
+  /* ================= RENDER ================= */
 
   return (
     <div className="space-y-6">
@@ -117,15 +60,17 @@ export default function DoctorsListPage() {
       </div>
 
       {/* ================= LIST CARD ================= */}
-      <div className="bg-white border rounded-xl p-6">
+      <div className="bg-white border rounded-xl p-6 flex flex-col h-[calc(100vh-220px)]">
+        {/* ================= TOP BAR ================= */}
         <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-lg font-semibold">Doctors List</h2>
             <p className="text-sm text-gray-500">
-              A list of all doctors in your clinic with their details.
+              A list of all doctors in your clinic.
             </p>
           </div>
 
+          {/* SEARCH + FILTER */}
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search
@@ -133,10 +78,28 @@ export default function DoctorsListPage() {
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               />
               <input
+                value={search}
+                onChange={(e) => {
+                  setPage(1);
+                  setSearch(e.target.value);
+                }}
                 placeholder="Search doctors..."
                 className="pl-9 pr-3 py-2 border rounded-md text-sm"
               />
             </div>
+
+            <select
+              value={status}
+              onChange={(e) => {
+                setPage(1);
+                setStatus(e.target.value as any);
+              }}
+              className="border px-3 py-2 rounded-md text-sm"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
 
             <button className="border p-2 rounded-md">
               <Filter size={16} />
@@ -145,115 +108,178 @@ export default function DoctorsListPage() {
         </div>
 
         {/* ================= TABLE ================= */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-gray-500 border-b">
-              <tr>
-                <th className="text-left py-3">Name</th>
-                <th className="text-left">Specialty</th>
-                <th className="text-left">Status</th>
-                <th className="text-left">Patients</th>
-                <th className="text-left">Experience</th>
-                <th className="text-left">Contact</th>
-                <th className="text-right">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {doctors.map((d) => (
-                <tr
-                  key={d.id} 
-                  className="border-b last:border-none"
-                >
-                  {/* NAME */}
-                  <td className="py-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={d.avatar}
-                        className="w-9 h-9 rounded-full"
-                      />
-                      <span className="font-medium">{d.name}</span>
-                    </div>
-                  </td>
-
-                  {/* SPECIALTY */}
-                  <td>{d.specialty}</td>
-
-                  {/* STATUS */}
-                  <td>
-                    <StatusBadge status={d.status} />
-                  </td>
-
-                  {/* PATIENTS */}
-                  <td>{d.patients}</td>
-
-                  {/* EXPERIENCE */}
-                  <td>{d.experience}</td>
-
-                  {/* CONTACT */}
-                  <td>
-                    <div>{d.email}</div>
-                    <div className="text-xs text-gray-400">
-                      {d.phone}
-                    </div>
-                  </td>
-
-                  {/* ACTIONS */}
-                  <td className="text-right relative">
-                    <button
-                      onClick={() =>
-                        setOpenMenu(
-                          openMenu === d.id ? null : d.id
-                        )
-                      }
-                    >
-                      <MoreHorizontal />
-                    </button>
-
-                    {openMenu === d.id && (
-                      <div className="absolute right-0 mt-2 w-44 bg-white border rounded-lg shadow-lg z-10">
-                        <div className="px-3 py-2 font-medium text-sm">
-                          Actions
-                        </div>
-                        <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100">
-                          View profile
-                        </button>
-                        <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100">
-                          Edit details
-                        </button>
-                        <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100">
-                          View schedule
-                        </button>
-                        <button className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100">
-                          Deactivate
-                        </button>
-                      </div>
-                    )}
-                  </td>
+        <div className="overflow-auto flex-1">
+          {loading ? (
+            <ListLoader />
+          ) : error ? (
+            <p className="text-center text-red-500 py-10">{error}</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="text-gray-500 border-b sticky top-0 bg-white z-10">
+                <tr>
+                  <th className="text-left py-3">Name</th>
+                  <th className="text-left">Specialty</th>
+                  <th className="text-left">Status</th>
+                  <th className="text-left">Experience</th>
+                  <th className="text-left">Contact</th>
+                  <th className="text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {doctors.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="text-center py-6">
+                      No doctors found
+                    </td>
+                  </tr>
+                )}
+
+                {doctors.map((d: any) => (
+                  <tr
+                    key={d._id}
+                    className="border-b last:border-none hover:bg-gray-50"
+                  >
+                    {/* NAME */}
+                    <td className="py-4">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={
+                            d?.personal?.profileImage
+                              ? `http://localhost:5000/uploads/${d.personal.profileImage}`
+                              : "/avatar.png"
+                          }
+                          className="w-9 h-9 rounded-full object-cover"
+                        />
+                        <span className="font-medium">
+                          {d.personal.firstName} {d.personal.lastName}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* SPECIALTY */}
+                    <td>{d.professional.primarySpecialization}</td>
+
+                    {/* STATUS */}
+                    <td>
+                      <StatusBadge
+                        status={d.isActive ? "Active" : "Inactive"}
+                      />
+                    </td>
+
+                    {/* EXPERIENCE */}
+                    <td>{d.professional.experience} yrs</td>
+
+                    {/* CONTACT */}
+                    <td>
+                      <div>{d.account.email}</div>
+                      <div className="text-xs text-gray-400">
+                        {d.personal.phone}
+                      </div>
+                    </td>
+
+                    {/* ACTIONS */}
+                    <td className="text-right relative">
+                      <button
+                        onClick={() =>
+                          setOpenMenu(openMenu === d._id ? null : d._id)
+                        }
+                      >
+                        <MoreHorizontal />
+                      </button>
+
+                      {openMenu === d._id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-[60] py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+
+                          {/* View Profile */}
+                          <button
+                            onClick={() => navigate("/admin/doctor-profile")}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                          >
+                            <User size={16} className="text-slate-400" />
+                            <span className="font-medium">View Profile</span>
+                          </button>
+                          <button onClick={() => navigate(`/admin/doctors/edit/${d._id}`)}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                          >
+                            <Edit3 size={16} className="text-slate-400" />
+                            <span className="font-medium">Edit Details</span>
+                          </button>
+
+                          <button onClick={() => navigate("/admin/doctors/appointment-schedule")}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                          >
+                            <Eye size={16} className="text-slate-400" />
+                            <span className="font-medium">View Schedule</span>
+                          </button>
+
+                          <div className="h-px bg-gray-100 my-1 mx-2" />
+
+                          <button
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${d.isActive
+                              ? "text-rose-600 hover:bg-rose-50"
+                              : "text-emerald-600 hover:bg-emerald-50"
+                              }`}
+                          >
+                            {d.isActive ? (
+                              <>
+                                <Power size={16} />
+                                <span className="font-bold">Deactivate</span>
+                              </>
+                            ) : (
+                              <>
+                                <UserCheck size={16} />
+                                <span className="font-bold">Activate</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* ================= PAGINATION ================= */}
+        <div className="flex justify-between items-center pt-4 border-t">
+          <span className="text-sm text-gray-500">Page {page}</span>
+
+          <div className="flex gap-2">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="px-3 py-1.5 border rounded-md text-sm disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            <button
+              disabled={doctors.length < limit}
+              onClick={() => setPage((p) => p + 1)}
+              className="px-3 py-1.5 border rounded-md text-sm disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-/* ---------------- COMPONENTS ---------------- */
+/* ================= STATUS BADGE ================= */
 
-function StatusBadge({ status }: { status: DoctorStatus }) {
+function StatusBadge({ status }: { status: string }) {
   const styles =
     status === "Active"
       ? "bg-green-100 text-green-600"
-      : status === "On Leave"
-      ? "bg-orange-100 text-orange-600"
       : "bg-red-100 text-red-600";
 
   return (
-    <span
-      className={`px-3 py-1 text-xs rounded-full ${styles}`}
-    >
+    <span className={`px-3 py-1 text-xs rounded-full ${styles}`}>
       {status}
     </span>
   );

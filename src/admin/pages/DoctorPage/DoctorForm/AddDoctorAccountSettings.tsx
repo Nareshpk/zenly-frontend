@@ -1,6 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export default function AddDoctorAccountSettings() {
+type Mode = "add" | "edit";
+
+export default function AddDoctorAccountSettings({
+  onFinalSave,
+  mode = "add",
+  initialValues,
+}: {
+  onFinalSave: (data: any) => void;
+  mode?: Mode;
+  initialValues?: any;
+}) {
+  const [form, setForm] = useState({
+    username: "",
+    password: "",
+    email: "",
+  });
+
   const [access, setAccess] = useState({
     patientRecords: true,
     prescriptions: true,
@@ -14,34 +30,122 @@ export default function AddDoctorAccountSettings() {
     system: true,
   });
 
+  /* ================= PREFILL (EDIT MODE) ================= */
+
+  useEffect(() => {
+    if (mode === "edit" && initialValues) {
+      setForm({
+        username: initialValues.username || "",
+        email: initialValues.email || "",
+        password: "", // ❌ never prefill password
+      });
+
+      setAccess(
+        initialValues.access || {
+          patientRecords: true,
+          prescriptions: true,
+          billing: false,
+          reports: false,
+        }
+      );
+
+      setNotifications(
+        initialValues.notifications || {
+          appointments: true,
+          patientUpdates: true,
+          system: true,
+        }
+      );
+    }
+  }, [mode, initialValues]);
+
+  /* ================= HANDLERS ================= */
+
+  const handleChange = (e: any) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFinalSave = () => {
+    onFinalSave({
+      account: form,
+      access,
+      notifications,
+    });
+  };
+
+  const handleClear = () => {
+    if (mode === "edit") return; // ❌ disable clear in edit
+
+    setForm({
+      username: "",
+      password: "",
+      email: "",
+    });
+
+    setAccess({
+      patientRecords: true,
+      prescriptions: true,
+      billing: false,
+      reports: false,
+    });
+
+    setNotifications({
+      appointments: true,
+      patientUpdates: true,
+      system: true,
+    });
+  };
+
+  /* ================= RENDER ================= */
+
   return (
     <div className="bg-white border rounded-xl p-6 space-y-8">
-      {/* ================= HEADER ================= */}
+      {/* HEADER */}
       <div>
-        <h2 className="font-semibold">Account Settings</h2>
+        <h2 className="font-semibold">
+          Account Settings {mode === "edit" && "(Edit)"}
+        </h2>
         <p className="text-sm text-gray-500">
           Configure the doctor&apos;s account and system access.
         </p>
       </div>
 
-      {/* ================= ACCOUNT INFO ================= */}
+      {/* ACCOUNT INFO */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input label="Username" placeholder="Enter username" />
         <Input
-          label="Temporary Password"
-          placeholder="Enter temporary password"
+          label="Username"
+          name="username"
+          value={form.username}
+          onChange={handleChange}
+          disabled={mode === "edit"} // 🔒 lock username
+          placeholder="Enter username"
+        />
+
+        <Input
+          label={mode === "edit" ? "New Password (Optional)" : "Temporary Password"}
+          name="password"
           type="password"
+          value={form.password}
+          onChange={handleChange}
+          placeholder={mode === "edit" ? "Leave blank to keep existing" : "Enter temporary password"}
         />
       </div>
 
       <div>
-        <Input label="Email Address" placeholder="Enter email address" />
+        <Input
+          label="Email Address"
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          placeholder="Enter email address"
+        />
         <p className="text-xs text-gray-500 mt-1">
-          This will be used for login and notifications.
+          Used for login and notifications.
         </p>
       </div>
 
-      {/* ================= SYSTEM ACCESS ================= */}
+      {/* SYSTEM ACCESS */}
       <Section title="System Access">
         <ToggleRow
           label="Patient Records"
@@ -51,28 +155,25 @@ export default function AddDoctorAccountSettings() {
             setAccess({ ...access, patientRecords: !access.patientRecords })
           }
         />
-
         <ToggleRow
           label="Prescriptions"
-          description="Allow creating and managing prescriptions"
+          description="Allow managing prescriptions"
           value={access.prescriptions}
           onChange={() =>
             setAccess({ ...access, prescriptions: !access.prescriptions })
           }
         />
-
         <ToggleRow
           label="Billing"
-          description="Allow access to billing information"
+          description="Allow access to billing"
           value={access.billing}
           onChange={() =>
             setAccess({ ...access, billing: !access.billing })
           }
         />
-
         <ToggleRow
           label="Reports"
-          description="Allow access to reports and analytics"
+          description="Allow access to reports"
           value={access.reports}
           onChange={() =>
             setAccess({ ...access, reports: !access.reports })
@@ -80,11 +181,11 @@ export default function AddDoctorAccountSettings() {
         />
       </Section>
 
-      {/* ================= NOTIFICATIONS ================= */}
+      {/* NOTIFICATIONS */}
       <Section title="Notifications">
         <ToggleRow
           label="Appointment Notifications"
-          description="Receive notifications for new appointments"
+          description="New appointment alerts"
           value={notifications.appointments}
           onChange={() =>
             setNotifications({
@@ -93,10 +194,9 @@ export default function AddDoctorAccountSettings() {
             })
           }
         />
-
         <ToggleRow
           label="Patient Updates"
-          description="Receive notifications for patient updates"
+          description="Patient update alerts"
           value={notifications.patientUpdates}
           onChange={() =>
             setNotifications({
@@ -105,10 +205,9 @@ export default function AddDoctorAccountSettings() {
             })
           }
         />
-
         <ToggleRow
           label="System Notifications"
-          description="Receive system and administrative notifications"
+          description="System notifications"
           value={notifications.system}
           onChange={() =>
             setNotifications({
@@ -119,48 +218,42 @@ export default function AddDoctorAccountSettings() {
         />
       </Section>
 
-      {/* ================= FOOTER ================= */}
+      {/* FINAL ACTIONS */}
       <div className="flex justify-end gap-3 pt-4 border-t">
-        <button className="px-4 py-2 text-sm border rounded-md">
-          Cancel
+        <button
+          onClick={handleClear}
+          disabled={mode === "edit"}
+          className="px-4 py-2 text-sm border rounded-md disabled:opacity-50"
+        >
+          Clear
         </button>
-        <button className="px-4 py-2 text-sm bg-black text-white rounded-md">
-          Save Doctor
+
+        <button
+          onClick={handleFinalSave}
+          className="px-4 py-2 text-sm bg-black text-white rounded-md"
+        >
+          {mode === "edit" ? "Update Doctor" : "Save Doctor"}
         </button>
       </div>
     </div>
   );
 }
 
-/* ================= REUSABLE COMPONENTS ================= */
+/* ================= REUSABLE ================= */
 
-function Input({
-  label,
-  ...props
-}: {
-  label: string;
-  [key: string]: any;
-}) {
+function Input({ label, ...props }: any) {
   return (
     <div>
-      <label className="block text-sm font-medium mb-1">
-        {label}
-      </label>
+      <label className="block text-sm font-medium mb-1">{label}</label>
       <input
         {...props}
-        className="w-full border rounded-md px-3 py-2 text-sm"
+        className="w-full border rounded-md px-3 py-2 text-sm disabled:bg-gray-100"
       />
     </div>
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Section({ title, children }: any) {
   return (
     <div className="border-t pt-6 space-y-4">
       <h3 className="font-medium">{title}</h3>
@@ -169,17 +262,7 @@ function Section({
   );
 }
 
-function ToggleRow({
-  label,
-  description,
-  value,
-  onChange,
-}: {
-  label: string;
-  description: string;
-  value: boolean;
-  onChange: () => void;
-}) {
+function ToggleRow({ label, description, value, onChange }: any) {
   return (
     <div className="flex items-center justify-between">
       <div>
